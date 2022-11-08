@@ -23,12 +23,24 @@ load(
 )
 
 licenses(["notice"])
+load("@build_bazel_rules_apple//apple:ios.bzl", "ios_static_framework")
 
 MIN_IOS_VERSION = "12.0"
 
 alias(
     name = "holistictrackinggpu",
     actual = "HolisticTrackingGpuApp",
+)
+
+ios_static_framework(
+    name = "HolisticTrackingGpuFramework",
+    bundle_name = "HolisticTrackingGpu",
+    families = ["iphone", "ipad"],
+    minimum_os_version = MIN_IOS_VERSION,
+    deps = [
+        ":HolisticTrackingGpuAppLibrary",
+        "@ios_opencv//:OpencvFramework",
+    ],
 )
 
 ios_application(
