@@ -33,9 +33,8 @@ alias(
 )
 
 ios_framework(
-    name = "HolisticTrackingGpuFramework",
-    bundle_id = BUNDLE_ID_PREFIX + ".HolisticTrackingGpu",
-    #bundle_name = "HolisticTrackingGpu",
+    name = "HolisticTracking",
+    bundle_id = BUNDLE_ID_PREFIX + ".HolisticTracking",
     families = ["iphone", "ipad"],
     infoplists = [
         "Info.plist",
@@ -59,7 +58,7 @@ objc_library(
         "HolisticTracker.h",
     ],
     data = [
-        "//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu.binarypb",
+        "//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_segmentation.binarypb",
         "//mediapipe/modules/face_detection:face_detection_short_range.tflite",
         "//mediapipe/modules/face_landmark:face_landmark.tflite",
         "//mediapipe/modules/hand_landmark:hand_landmark_full.tflite",
@@ -77,7 +76,7 @@ objc_library(
         "//mediapipe:ios_i386": [],
         "//mediapipe:ios_x86_64": [],
         "//conditions:default": [
-            "//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_deps",
+            "//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_seg_deps",
         ],
     }),
 )
