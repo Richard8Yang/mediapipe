@@ -9,7 +9,7 @@
 //static const char* kInputStream = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GraphInputStream"];//"input_video";
 //static const char* kOutputStream = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GraphOutputStream"];//"output_video";
 //static const char* kCameraFacing = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CameraPosition"];
-static NSString* const kGraphName = @"holistic_tracking_gpu";
+static NSString* const kGraphName = @"holistic_tracking_gpu_segmentation";
 static const char* kInputStream = "input_video";
 static const char* kOutputStream = "output_video";
 //static const char* kRectOutputStream = "hand_rect_from_landmarks";
@@ -21,10 +21,6 @@ static const char* kOutputStream = "output_video";
 {
 }
 @property(nonatomic) MPPGraph* mediapipeGraph;
-@end
-
-@interface HTLandmark()
-- (instancetype)initWithX:(float)x y:(float)y z:(float)z;
 @end
 
 @implementation HolisticTracker {}
@@ -41,7 +37,8 @@ static const char* kOutputStream = "output_video";
 
 #pragma mark - MediaPipe graph methods
 
-+ (MPPGraph*)loadGraphFromResource:(NSString*)resource {
++ (MPPGraph*)loadGraphFromResource:(NSString*)resource
+                enableSegmentation:(bool)enableSeg {
     // Load the graph config resource.
     NSError* configLoadError = nil;
     NSBundle* bundle = [NSBundle bundleForClass:[self class]];
@@ -61,6 +58,7 @@ static const char* kOutputStream = "output_video";
     
     // Create MediaPipe graph with mediapipe::CalculatorGraphConfig proto object.
     MPPGraph* newGraph = [[MPPGraph alloc] initWithGraphConfig:config];
+    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(enableSeg)) named:"enable_segmentation"];
     [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
     //[newGraph addFrameOutputStream:kLandmarksOutputStream outputPacketType:MPPPacketTypeRaw];
     //[newGraph addFrameOutputStream:kRectOutputStream outputPacketType:MPPPacketTypeRaw];
@@ -69,11 +67,10 @@ static const char* kOutputStream = "output_video";
     return newGraph;
 }
 
-- (instancetype)init
-{
+- (instancetype)init:(bool)enableSegmentation {
     self = [super init];
     if (self) {
-        self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName];
+        self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName enableSegmentation:enableSegmentation];
         self.mediapipeGraph.delegate = self;
         // Set maxFramesInFlight to a small value to avoid memory contention for real-time processing.
         self.mediapipeGraph.maxFramesInFlight = 2;
@@ -128,21 +125,6 @@ static const char* kOutputStream = "output_video";
     [self.mediapipeGraph sendPixelBuffer:imageBuffer
                               intoStream:kInputStream
                               packetType:MPPPacketTypePixelBuffer];
-}
-
-@end
-
-@implementation HTLandmark
-
-- (instancetype)initWithX:(float)x y:(float)y z:(float)z
-{
-    self = [super init];
-    if (self) {
-        _x = x;
-        _y = y;
-        _z = z;
-    }
-    return self;
 }
 
 @end

@@ -9,14 +9,8 @@
 @end
 
 @interface HolisticTracker : NSObject
-- (instancetype)init;
+- (instancetype)init:(bool)enableSegmentation;
 - (void)startGraph;
 - (void)processVideoFrame:(CVPixelBufferRef)imageBuffer;
 @property (weak, nonatomic) id <TrackerDelegate> delegate;
-@end
-
-@interface HTLandmark: NSObject
-@property(nonatomic, readonly) float x;
-@property(nonatomic, readonly) float y;
-@property(nonatomic, readonly) float z;
 @end
