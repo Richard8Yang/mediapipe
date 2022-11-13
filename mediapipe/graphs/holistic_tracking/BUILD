@@ -52,7 +52,7 @@ cc_library(
 )
 
 cc_library(
-    name = "holistic_tracking_gpu_seg_deps",
+    name = "holistic_tracking_gpu_full_deps",
     deps = [
         ":holistic_tracking_to_render_data",
         "//mediapipe/calculators/core:flow_limiter_calculator",
@@ -71,10 +71,10 @@ mediapipe_binary_graph(
 )
 
 mediapipe_binary_graph(
-    name = "holistic_tracking_gpu_segmentation",
-    graph = "holistic_tracking_gpu_segmentation.pbtxt",
-    output_name = "holistic_tracking_gpu_segmentation.binarypb",
-    deps = [":holistic_tracking_gpu_seg_deps"],
+    name = "holistic_tracking_gpu_full",
+    graph = "holistic_tracking_gpu_full.pbtxt",
+    output_name = "holistic_tracking_gpu_full.binarypb",
+    deps = [":holistic_tracking_gpu_full_deps"],
 )
 
 cc_library(

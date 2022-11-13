@@ -4,6 +4,11 @@
 # false. (bool)
 input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
 
+# Whether to run the face landmark model with attention on lips and eyes to
+# provide more accuracy, and additionally output iris landmarks. If unspecified,
+# functions as set to false. (bool)
+input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
+
 # GPU buffer. (GpuBuffer)
 input_stream: "input_video"
 
@@ -46,6 +51,7 @@ node {
 node {
   calculator: "HolisticLandmarkGpu"
   input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
+  input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
   input_stream: "IMAGE:throttled_input_video"
   output_stream: "POSE_LANDMARKS:pose_landmarks"
   output_stream: "POSE_ROI:pose_roi"
