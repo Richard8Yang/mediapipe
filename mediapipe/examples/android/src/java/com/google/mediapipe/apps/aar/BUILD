@@ -2,9 +2,10 @@ load("//mediapipe/java/com/google/mediapipe:mediapipe_aar.bzl", "mediapipe_aar")
 
 mediapipe_aar(
     name = "holistic_tracking",
-    calculators = ["//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_deps"],
+    #calculators = ["//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_deps"],
+    calculators = ["//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_seg_deps"],
     assets = [
-        "//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu.binarypb",
+        "//mediapipe/graphs/holistic_tracking:holistic_tracking_gpu_segmentation.binarypb",
         "//mediapipe/modules/face_detection:face_detection_short_range.tflite",
         "//mediapipe/modules/face_landmark:face_landmark.tflite",
         "//mediapipe/modules/hand_landmark:hand_landmark_full.tflite",
