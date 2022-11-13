@@ -9,7 +9,7 @@
 //static const char* kInputStream = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GraphInputStream"];//"input_video";
 //static const char* kOutputStream = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GraphOutputStream"];//"output_video";
 //static const char* kCameraFacing = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CameraPosition"];
-static NSString* const kGraphName = @"holistic_tracking_gpu_segmentation";
+static NSString* const kGraphName = @"holistic_tracking_gpu_full";
 static const char* kInputStream = "input_video";
 static const char* kOutputStream = "output_video";
 //static const char* kRectOutputStream = "hand_rect_from_landmarks";
