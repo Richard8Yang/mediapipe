@@ -38,7 +38,8 @@ static const char* kOutputStream = "output_video";
 #pragma mark - MediaPipe graph methods
 
 + (MPPGraph*)loadGraphFromResource:(NSString*)resource
-                enableSegmentation:(bool)enableSeg {
+                enableSegmentation:(bool)enableSeg
+                 enableRefinedFace:(bool)enableIris {
     // Load the graph config resource.
     NSError* configLoadError = nil;
     NSBundle* bundle = [NSBundle bundleForClass:[self class]];
@@ -59,6 +60,7 @@ static const char* kOutputStream = "output_video";
     // Create MediaPipe graph with mediapipe::CalculatorGraphConfig proto object.
     MPPGraph* newGraph = [[MPPGraph alloc] initWithGraphConfig:config];
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(enableSeg)) named:"enable_segmentation"];
+    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(enableIris)) named:"refine_face_landmarks"];
     [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
     //[newGraph addFrameOutputStream:kLandmarksOutputStream outputPacketType:MPPPacketTypeRaw];
     //[newGraph addFrameOutputStream:kRectOutputStream outputPacketType:MPPPacketTypeRaw];
@@ -67,10 +69,10 @@ static const char* kOutputStream = "output_video";
     return newGraph;
 }
 
-- (instancetype)init:(bool)enableSegmentation {
+- (instancetype)init:(bool)enableSegmentation enableRefinedFace: (bool)enableIris {
     self = [super init];
     if (self) {
-        self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName enableSegmentation:enableSegmentation];
+        self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName enableSegmentation:enableSegmentation enableRefinedFace:enableIris];
         self.mediapipeGraph.delegate = self;
         // Set maxFramesInFlight to a small value to avoid memory contention for real-time processing.
         self.mediapipeGraph.maxFramesInFlight = 2;

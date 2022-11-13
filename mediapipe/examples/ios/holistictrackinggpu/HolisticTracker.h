@@ -9,7 +9,7 @@
 @end
 
 @interface HolisticTracker : NSObject
-- (instancetype)init:(bool)enableSegmentation;
+- (instancetype)init: (bool)enableSegmentation enableRefinedFace: (bool)enableIris;
 - (void)startGraph;
 - (void)processVideoFrame:(CVPixelBufferRef)imageBuffer;
 @property (weak, nonatomic) id <TrackerDelegate> delegate;
