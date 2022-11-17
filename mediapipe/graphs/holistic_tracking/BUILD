@@ -40,6 +40,44 @@ mediapipe_simple_subgraph(
     ],
 )
 
+mediapipe_simple_subgraph(
+    name = "multi_holistic_tracking_to_render_data",
+    graph = "multi_holistic_tracking_to_render_data.pbtxt",
+    register_as = "MultiHolisticTrackingToRenderData",
+    deps = [
+        "//mediapipe/calculators/core:concatenate_proto_list_calculator",
+        "//mediapipe/calculators/core:concatenate_vector_calculator",
+        "//mediapipe/calculators/core:merge_calculator",
+        "//mediapipe/calculators/core:split_proto_list_calculator",
+        "//mediapipe/calculators/core:split_vector_calculator",
+        "//mediapipe/calculators/util:detections_to_render_data_calculator",
+        "//mediapipe/calculators/util:landmarks_to_render_data_calculator",
+        "//mediapipe/calculators/util:rect_to_render_data_calculator",
+        "//mediapipe/calculators/util:rect_to_render_scale_calculator",
+        "//mediapipe/modules/holistic_landmark:hand_wrist_for_pose",
+    ],
+)
+
+mediapipe_simple_subgraph(
+    name = "single_holistic_tracker_gpu",
+    graph = "single_holistic_tracker_gpu.pbtxt",
+    register_as = "SingleHolisticTrackerGpu",
+    deps = [
+        # TODO:
+        "//mediapipe/modules/holistic_landmark:single_pose_landmark_gpu",
+    ],
+)
+
+mediapipe_simple_subgraph(
+    name = "multi_holistic_tracker_gpu",
+    graph = "multi_holistic_tracker_gpu.pbtxt",
+    register_as = "MultiHolisticTrackerGpu",
+    deps = [
+        # TODO:
+        "//mediapipe/modules/holistic_landmark:multi_pose_detector_gpu",
+    ],
+)
+
 cc_library(
     name = "holistic_tracking_gpu_deps",
     deps = [
@@ -63,6 +101,22 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "multi_holistic_tracking_gpu_deps",
+    deps = [
+        ":single_holistic_tracker_gpu",
+        ":multi_holistic_tracker_gpu",
+        ":multi_holistic_tracking_to_render_data",
+        "//mediapipe/calculators/core:flow_limiter_calculator",
+        "//mediapipe/calculators/core:begin_loop_calculator",
+        "//mediapipe/calculators/core:end_loop_calculator",
+        "//mediapipe/calculators/image:image_properties_calculator",
+        "//mediapipe/calculators/util:annotation_overlay_calculator",
+        "//mediapipe/calculators/util:landmarks_to_render_data_calculator",
+        "//mediapipe/calculators/image:recolor_calculator",
+    ],
+)
+
 mediapipe_binary_graph(
     name = "holistic_tracking_gpu",
     graph = "holistic_tracking_gpu.pbtxt",
@@ -75,6 +129,13 @@ mediapipe_binary_graph(
     graph = "holistic_tracking_gpu_full.pbtxt",
     output_name = "holistic_tracking_gpu_full.binarypb",
     deps = [":holistic_tracking_gpu_full_deps"],
+)
+
+mediapipe_binary_graph(
+    name = "multi_holistic_tracking_gpu",
+    graph = "multi_holistic_tracking_gpu.pbtxt",
+    output_name = "multi_holistic_tracking_gpu.binarypb",
+    deps = [":multi_holistic_tracking_gpu_deps"],
 )
 
 cc_library(

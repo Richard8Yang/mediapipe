@@ -256,6 +256,49 @@ mediapipe_simple_subgraph(
 )
 
 mediapipe_simple_subgraph(
+    name = "multi_pose_detector_gpu",
+    graph = "multi_pose_detector_gpu.pbtxt",
+    register_as = "MultiPoseDetectorGpu",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mediapipe/calculators/core:begin_loop_calculator",
+        "//mediapipe/calculators/core:end_loop_calculator",
+        "//mediapipe/calculators/core:gate_calculator",
+        #"//mediapipe/calculators/core:clip_vector_size_calculator",
+        "//mediapipe/calculators/core:merge_calculator",
+        "//mediapipe/calculators/core:packet_presence_calculator",
+        "//mediapipe/calculators/core:previous_loopback_calculator",
+        #"//mediapipe/calculators/core:split_vector_calculator",
+        #"//mediapipe/calculators/image:image_properties_calculator",
+        #"//mediapipe/calculators/util:from_image_calculator",
+        #"//mediapipe/calculators/util:association_norm_rect_calculator",
+        #"//mediapipe/calculators/util:collection_has_min_size_calculator",
+        #"//mediapipe/calculators/image:image_transformation_calculator",
+        "//mediapipe/modules/pose_detection:pose_detection_gpu",
+        "//mediapipe/modules/pose_landmark:pose_detection_to_roi",
+    ],
+)
+
+mediapipe_simple_subgraph(
+    name = "single_pose_landmark_gpu",
+    graph = "single_pose_landmark_gpu.pbtxt",
+    register_as = "SinglePoseLandmarkGpu",
+    visibility = ["//visibility:public"],
+    deps = [
+        #"//mediapipe/calculators/core:split_vector_calculator",
+        #"//mediapipe/calculators/image:image_properties_calculator",
+        "//mediapipe/calculators/util:from_image_calculator",
+        #"//mediapipe/calculators/util:association_norm_rect_calculator",
+        #"//mediapipe/calculators/util:collection_has_min_size_calculator",
+        #"//mediapipe/calculators/image:image_transformation_calculator",
+        "//mediapipe/modules/pose_landmark:pose_landmark_by_roi_gpu",
+        "//mediapipe/modules/pose_landmark:pose_landmarks_to_roi",
+        "//mediapipe/modules/pose_landmark:pose_landmark_filtering",
+        "//mediapipe/modules/pose_landmark:pose_segmentation_filtering",
+    ],
+)
+
+mediapipe_simple_subgraph(
     name = "holistic_landmark_cpu",
     graph = "holistic_landmark_cpu.pbtxt",
     register_as = "HolisticLandmarkCpu",

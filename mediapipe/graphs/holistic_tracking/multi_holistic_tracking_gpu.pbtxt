@@ -1,0 +1,69 @@
+type: "MultiHolisticTrackingGpu"
+
+# GPU buffer. (GpuBuffer)
+input_stream: "input_video"
+
+# GPU image with rendered results. (GpuBuffer)
+output_stream: "output_video"
+
+# Throttles the images flowing downstream for flow control. It passes through
+# the very first incoming image unaltered, and waits for downstream nodes
+# (calculators and subgraphs) in the graph to finish their tasks before it
+# passes through another image. All images that come in while waiting are
+# dropped, limiting the number of in-flight images in most part of the graph to
+# 1. This prevents the downstream nodes from queuing up incoming images and data
+# excessively, which leads to increased latency and memory usage, unwanted in
+# real-time mobile applications. It also eliminates unnecessarily computation,
+# e.g., the output produced by a node may get dropped downstream if the
+# subsequent nodes are still busy processing previous inputs.
+node {
+  calculator: "FlowLimiterCalculator"
+  input_stream: "input_video"
+  input_stream: "FINISHED:output_video"
+  input_stream_info: {
+    tag_index: "FINISHED"
+    back_edge: true
+  }
+  output_stream: "throttled_input_video"
+  node_options: {
+    [type.googleapis.com/mediapipe.FlowLimiterCalculatorOptions] {
+      max_in_flight: 1
+      max_in_queue: 1
+      # Timeout is disabled (set to 0) as first frame processing can take more
+      # than 1 second.
+      in_flight_timeout: 0
+    }
+  }
+}
+
+node {
+  calculator: "MultiHolisticTrackerGpu"
+  input_stream: "IMAGE:throttled_input_video"
+  output_stream: "MULTI_RD:multi_landmarks_render_data"
+  output_stream: "MULTI_BGJOINTS_RD:multi_landmarks_background_joints_render_data"
+  output_stream: "MULTI_LJOINTS_RD:multi_landmarks_left_joints_render_data"
+  output_stream: "MULTI_RJOINTS_RD:multi_landmarks_right_joints_render_data"
+  output_stream: "MULTI_LHCON_RD:multi_left_hand_landmarks_connections_rd"
+  output_stream: "MULTI_LHJOINTS_RD:multi_left_hand_landmarks_joints_rd"
+  output_stream: "MULTI_RHCON_RD:multi_right_hand_landmarks_connections_rd"
+  output_stream: "MULTI_RHJOINTS_RD:multi_right_hand_landmarks_joints_rd"
+  output_stream: "MULTI_FCON_RD:multi_face_landmarks_connections_rd"
+  output_stream: "MULTI_FJOINTS_RD:multi_face_landmarks_joints_rd"
+}
+
+# Draws annotations and overlays them on top of the input images.
+node {
+  calculator: "AnnotationOverlayCalculator"
+  input_stream: "IMAGE_GPU:throttled_input_video"
+  input_stream: "MULTI_RD:multi_landmarks_render_data"
+  input_stream: "MULTI_BGJOINTS_RD:multi_landmarks_background_joints_render_data"
+  input_stream: "MULTI_LJOINTS_RD:multi_landmarks_left_joints_render_data"
+  input_stream: "MULTI_RJOINTS_RD:multi_landmarks_right_joints_render_data"
+  input_stream: "MULTI_LHCON_RD:multi_left_hand_landmarks_connections_rd"
+  input_stream: "MULTI_LHJOINTS_RD:multi_left_hand_landmarks_joints_rd"
+  input_stream: "MULTI_RHCON_RD:multi_right_hand_landmarks_connections_rd"
+  input_stream: "MULTI_RHJOINTS_RD:multi_right_hand_landmarks_joints_rd"
+  input_stream: "MULTI_FCON_RD:multi_face_landmarks_connections_rd"
+  input_stream: "MULTI_FJOINTS_RD:multi_face_landmarks_joints_rd"
+  output_stream: "IMAGE_GPU:output_video"
+}

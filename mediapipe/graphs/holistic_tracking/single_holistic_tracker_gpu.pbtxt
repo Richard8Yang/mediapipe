@@ -1,0 +1,93 @@
+type: "SingleHolisticTrackerGpu"
+
+# GPU image. (GpuBuffer)
+input_stream: "IMAGE:image"
+input_stream: "SIZE:image_size"
+
+# Regions of interest calculated based on pose detections. (NormalizedRect)
+input_stream: "ROI_FROM_DETECTION:pose_roi_from_detection"
+
+# Whether to filter landmarks across different input images to reduce jitter.
+# If unspecified, functions as set to true. (bool)
+input_side_packet: "SMOOTH_LANDMARKS:smooth_landmarks"
+
+# Whether to predict the segmentation mask. If unspecified, functions as set to
+# false. (bool)
+input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
+
+# Whether to filter segmentation mask across different input images to reduce
+# jitter. If unspecified, functions as set to true. (bool)
+input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
+
+# Complexity of the pose landmark model: 0, 1 or 2. Landmark accuracy as well as
+# inference latency generally go up with the model complexity. If unspecified,
+# functions as set to 1. (int)
+input_side_packet: "MODEL_COMPLEXITY:model_complexity"
+
+# Whether to run the face landmark model with attention on lips and eyes to
+# provide more accuracy, and additionally output iris landmarks. If unspecified,
+# functions as set to false. (bool)
+input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
+
+# Pose landmarks. (NormalizedLandmarkList)
+# 33 pose landmarks.
+output_stream: "POSE_LANDMARKS:pose_landmarks"
+# 33 pose world landmarks. (LandmarkList)
+output_stream: "WORLD_LANDMARKS:pose_world_landmarks"
+# 21 left hand landmarks. (NormalizedLandmarkList)
+output_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
+# 21 right hand landmarks. (NormalizedLandmarkList)
+output_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
+# 468 face landmarks. (NormalizedLandmarkList)
+output_stream: "FACE_LANDMARKS:face_landmarks"
+
+# Segmentation mask. (GpuBuffer in RGBA, with the same mask values in R and A)
+output_stream: "SEGMENTATION_MASK:segmentation_mask"
+
+# Regions of interest calculated based on landmarks. (NormalizedRect)
+output_stream: "ROI_FROM_LANDMARKS:pose_roi_from_landmarks"
+
+node {
+  calculator: "SinglePoseLandmarkGpu"
+  input_side_packet: "SMOOTH_LANDMARKS:smooth_landmarks"
+  input_side_packet: "MODEL_COMPLEXITY:model_complexity"
+  input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
+  input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
+  input_stream: "IMAGE:image"
+  input_stream: "IMAGE_SIZE:image_size"
+  input_stream: "ROI:pose_roi_from_detection"
+  output_stream: "POSE_LANDMARKS:pose_landmarks"
+  output_stream: "WORLD_LANDMARKS:pose_world_landmarks"
+  output_stream: "SEGMENTATION_MASK:segmentation_mask"
+  output_stream: "ROI_FROM_LANDMARKS:pose_roi_from_landmarks"
+}
+
+# Extracts face-related pose landmarks.
+node {
+  calculator: "SplitNormalizedLandmarkListCalculator"
+  input_stream: "pose_landmarks"
+  output_stream: "face_landmarks_from_pose"
+  options: {
+    [mediapipe.SplitVectorCalculatorOptions.ext] {
+      ranges: { begin: 0 end: 11 }
+    }
+  }
+}
+
+# Predicts face landmarks based on the initial pose landmarks.
+node {
+  calculator: "FaceLandmarksFromPoseGpu"
+  input_stream: "IMAGE:image"
+  input_stream: "FACE_LANDMARKS_FROM_POSE:face_landmarks_from_pose"
+  input_side_packet: "REFINE_LANDMARKS:refine_face_landmarks"
+  output_stream: "FACE_LANDMARKS:face_landmarks"
+}
+
+# Predicts left and right hand landmarks based on the initial pose landmarks.
+node {
+  calculator: "HandLandmarksLeftAndRightGpu"
+  input_stream: "IMAGE:image"
+  input_stream: "POSE_LANDMARKS:pose_landmarks"
+  output_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
+  output_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
+}

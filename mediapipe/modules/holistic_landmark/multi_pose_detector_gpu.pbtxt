@@ -1,0 +1,121 @@
+type: "MultiPoseDetectorGpu"
+
+# GPU image. (GpuBuffer)
+input_stream: "IMAGE:image"
+input_stream: "SIZE:image_size"
+
+# Whether landmarks on the previous image should be used to help localize
+# landmarks on the current image. (bool)
+input_side_packet: "USE_PREV_LANDMARKS:use_prev_landmarks"
+
+# Regions of interest calculated based on landmarks. (NormalizedRect)
+input_stream: "ROI_FROM_LANDMARKS:multi_pose_roi_from_landmarks"
+
+# Regions of interest calculated based on pose detections. (NormalizedRect)
+output_stream: "ROI_FROM_DETECTION:multi_pose_roi_from_detection"
+
+# When the optional input side packet "use_prev_landmarks" is either absent or
+# set to true, uses the landmarks on the previous image to help localize
+# landmarks on the current image.
+node {
+  calculator: "GateCalculator"
+  input_side_packet: "ALLOW:use_prev_landmarks"
+  input_stream: "prev_multi_pose_roi_from_landmarks"
+  output_stream: "gated_prev_pose_rect_from_landmarks"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      allow: true
+    }
+  }
+}
+
+# Checks if there's previous pose rect calculated from landmarks.
+node: {
+  calculator: "PacketPresenceCalculator"
+  input_stream: "PACKET:gated_prev_pose_rect_from_landmarks"
+  output_stream: "PRESENCE:prev_pose_rect_from_landmarks_is_present"
+}
+
+# Drops the incoming image if the pose has already been identified from the
+# previous image. Otherwise, passes the incoming image through to trigger a new
+# round of pose detection.
+node {
+  calculator: "GateCalculator"
+  input_stream: "image"
+  input_stream: "image_size"
+  input_stream: "DISALLOW:prev_pose_rect_from_landmarks_is_present"
+  output_stream: "image_for_pose_detection"
+  output_stream: "image_size_for_pose_detection"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      empty_packets_as_allow: true
+    }
+  }
+}
+
+# Detects poses.
+node {
+  calculator: "PoseDetectionGpu"
+  input_stream: "IMAGE:image_for_pose_detection"
+  output_stream: "DETECTIONS:pose_detections"
+}
+
+# Outputs each element of pose_detections at a fake timestamp for the rest of
+# the graph to process. Clones the image_size packet for each pose_detection at
+# the fake timestamp. At the end of the loop, outputs the BATCH_END timestamp
+# for downstream calculators to inform them that all elements in the vector have
+# been processed.
+node {
+  calculator: "BeginLoopDetectionCalculator"
+  input_stream: "ITERABLE:pose_detections"
+  input_stream: "CLONE:image_size_for_pose_detection"
+  output_stream: "ITEM:pose_detection"
+  output_stream: "CLONE:image_size_for_poses"
+  output_stream: "BATCH_END:pose_detections_timestamp"
+}
+
+# Calculates region of interest based on pose detection, so that can be used
+# to detect landmarks.
+node {
+  calculator: "PoseDetectionToRoi"
+  input_stream: "DETECTION:pose_detection"
+  input_stream: "IMAGE_SIZE:image_size_for_poses"
+  output_stream: "ROI:pose_rect_from_detection"
+}
+
+# Collects a NormalizedRect for each hand into a vector. Upon receiving the
+# BATCH_END timestamp, outputs the vector of NormalizedRect at the BATCH_END
+# timestamp.
+node {
+  name: "EndLoopDetection"
+  calculator: "EndLoopNormalizedRectCalculator"
+  input_stream: "ITEM:pose_rect_from_detection"
+  input_stream: "BATCH_END:pose_detections_timestamp"
+  output_stream: "ITERABLE:pose_rects_from_detections"
+}
+
+# Selects either pose rect (or ROI) calculated from detection or from previously
+# detected landmarks if available (in this case, calculation of pose rect from
+# detection is skipped).
+node {
+  calculator: "MergeCalculator"
+  input_stream: "pose_rects_from_detections"
+  input_stream: "gated_prev_pose_rect_from_landmarks"
+  output_stream: "multi_pose_roi_from_detection"
+}
+
+# Caches pose rects calculated from landmarks, and upon the arrival of the next
+# input image, sends out the cached rects with timestamps replaced by that of
+# the input image, essentially generating a packet that carries the previous
+# pose rects. Note that upon the arrival of the very first input image, a
+# timestamp bound update occurs to jump start the feedback loop.
+node {
+  calculator: "PreviousLoopbackCalculator"
+  input_stream: "MAIN:image"
+  input_stream: "LOOP:multi_pose_roi_from_landmarks"
+  input_stream_info: {
+    tag_index: "LOOP"
+    back_edge: true
+  }
+  output_stream: "PREV_LOOP:prev_multi_pose_roi_from_landmarks"
+}
