@@ -1,0 +1,226 @@
+type: "MultiHolisticTrackerGpu"
+
+# GPU image. (GpuBuffer)
+input_stream: "IMAGE:image"
+
+# Whether to filter landmarks across different input images to reduce jitter.
+# If unspecified, functions as set to true. (bool)
+input_side_packet: "SMOOTH_LANDMARKS:smooth_landmarks"
+
+# Whether to predict the segmentation mask. If unspecified, functions as set to
+# false. (bool)
+input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
+
+# Whether to filter segmentation mask across different input images to reduce
+# jitter. If unspecified, functions as set to true. (bool)
+input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
+
+# Complexity of the pose landmark model: 0, 1 or 2. Landmark accuracy as well as
+# inference latency generally go up with the model complexity. If unspecified,
+# functions as set to 1. (int)
+input_side_packet: "MODEL_COMPLEXITY:model_complexity"
+
+# Pose landmarks. (NormalizedLandmarkList)
+# 33 pose landmarks.
+output_stream: "MULTI_POSE_LANDMARKS:multi_pose_landmarks"
+# 33 pose world landmarks. (LandmarkList)
+output_stream: "MULTI_WORLD_LANDMARKS:multi_pose_world_landmarks"
+# 21 left hand landmarks. (NormalizedLandmarkList)
+output_stream: "MULTI_LEFT_HAND_LANDMARKS:multi_left_hand_landmarks"
+# 21 right hand landmarks. (NormalizedLandmarkList)
+output_stream: "MULTI_RIGHT_HAND_LANDMARKS:multi_right_hand_landmarks"
+# 468 face landmarks. (NormalizedLandmarkList)
+output_stream: "MULTI_FACE_LANDMARKS:multi_face_landmarks"
+
+output_stream: "MULTI_RENDER_DATA:multi_render_data_vector"
+
+# Segmentation mask. (GpuBuffer in RGBA, with the same mask values in R and A)
+output_stream: "MULTI_SEGMENTATION_MASK:multi_segmentation_mask"
+
+# Regions of interest calculated based on landmarks. (NormalizedRect)
+output_stream: "MULTI_ROI_FROM_LANDMARKS:multi_pose_roi_from_landmarks"
+
+# Render data output
+output_stream: "MULTI_RD:multi_landmarks_render_data"
+output_stream: "MULTI_BGJOINTS_RD:multi_landmarks_background_joints_render_data"
+output_stream: "MULTI_LJOINTS_RD:multi_landmarks_left_joints_render_data"
+output_stream: "MULTI_RJOINTS_RD:multi_landmarks_right_joints_render_data"
+output_stream: "MULTI_LHCON_RD:multi_left_hand_landmarks_connections_rd"
+output_stream: "MULTI_LHJOINTS_RD:multi_left_hand_landmarks_joints_rd"
+output_stream: "MULTI_RHCON_RD:multi_right_hand_landmarks_connections_rd"
+output_stream: "MULTI_RHJOINTS_RD:multi_right_hand_landmarks_joints_rd"
+output_stream: "MULTI_FCON_RD:multi_face_landmarks_connections_rd"
+output_stream: "MULTI_FJOINTS_RD:multi_face_landmarks_joints_rd"
+
+# Gets image size.
+node {
+  calculator: "ImagePropertiesCalculator"
+  input_stream: "IMAGE_GPU:image"
+  output_stream: "SIZE:image_size"
+}
+
+node {
+  calculator: "MultiPoseDetectorGpu"
+  #input_side_packet: "NUM_POSES:num_poses"
+  input_stream: "IMAGE:image"
+  input_stream: "IMAGE_SIZE:image_size"
+  input_stream: "ROI_FROM_LANDMARKS:multi_pose_roi_from_landmarks"
+  output_stream: "ROI:multi_pose_roi_from_detection"
+}
+
+node {
+  calculator: "BeginLoopNormalizedRectCalculator"
+  input_stream: "ITERABLE:multi_pose_roi_from_detection"
+  input_stream: "CLONE:0:image"
+  input_stream: "CLONE:1:image_size"
+  output_stream: "ITEM:single_pose_roi_from_detection"
+  output_stream: "CLONE:0:image_for_landmarks"
+  output_stream: "CLONE:1:image_size_for_landmarks"
+  output_stream: "BATCH_END:pose_rects_timestamp"
+}
+
+node {
+  calculator: "SingleHolisticTrackingGpu"
+  input_side_packet: "SMOOTH_LANDMARKS:smooth_landmarks"
+  input_side_packet: "MODEL_COMPLEXITY:model_complexity"
+  input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
+  input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
+  input_side_packet: "REFINE_LANDMARKS:refine_face_landmarks"
+  input_stream: "IMAGE:image_for_landmarks"
+  input_stream: "IMAGE_SIZE:image_size_for_landmarks"
+  input_stream: "ROI:single_pose_roi_from_detection"
+  output_stream: "POSE_LANDMARKS:pose_landmarks"
+  output_stream: "WORLD_LANDMARKS:pose_world_landmarks"
+  output_stream: "FACE_LANDMARKS:face_landmarks"
+  output_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
+  output_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
+  output_stream: "SEGMENTATION_MASK:segmentation_mask"
+  output_stream: "ROI_FROM_LANDMARKS:pose_roi_from_landmarks"
+}
+
+# Converts pose, hands and face landmarks to a render data vector.
+node {
+  calculator: "MultiHolisticTrackingToRenderData"
+  input_stream: "IMAGE_SIZE:image_size_for_landmarks"
+  input_stream: "POSE_LANDMARKS:pose_landmarks"
+  input_stream: "POSE_ROI:pose_roi_from_landmarks"
+  input_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
+  input_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
+  input_stream: "FACE_LANDMARKS:face_landmarks"
+  output_stream: "RENDER_DATA:landmarks_render_data"
+  output_stream: "RENDER_DATA:landmarks_background_joints_render_data"
+  output_stream: "RENDER_DATA:landmarks_left_joints_render_data"
+  output_stream: "RENDER_DATA:landmarks_right_joints_render_data"
+  output_stream: "RENDER_DATA:left_hand_landmarks_connections_rd"
+  output_stream: "RENDER_DATA:left_hand_landmarks_joints_rd"
+  output_stream: "RENDER_DATA:right_hand_landmarks_connections_rd"
+  output_stream: "RENDER_DATA:right_hand_landmarks_joints_rd"
+  output_stream: "RENDER_DATA:face_landmarks_connections_rd"
+  output_stream: "RENDER_DATA:face_landmarks_joints_rd"
+}
+
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:landmarks_render_data"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_landmarks_render_data"
+}
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:landmarks_background_joints_render_data"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_landmarks_background_joints_render_data"
+}
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:landmarks_left_joints_render_data"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_landmarks_left_joints_render_data"
+}
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:landmarks_right_joints_render_data"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_landmarks_right_joints_render_data"
+}
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:left_hand_landmarks_connections_rd"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_left_hand_landmarks_connections_rd"
+}
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:left_hand_landmarks_joints_rd"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_left_hand_landmarks_joints_rd"
+}
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:right_hand_landmarks_connections_rd"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_right_hand_landmarks_connections_rd"
+}
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:right_hand_landmarks_joints_rd"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_right_hand_landmarks_joints_rd"
+}
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:face_landmarks_connections_rd"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_face_landmarks_connections_rd"
+}
+node {
+  calculator: "EndLoopRenderDataCalculator"
+  input_stream: "ITEM:face_landmarks_joints_rd"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_face_landmarks_joints_rd"
+}
+
+node {
+  calculator: "EndLoopNormalizedRectCalculator"
+  input_stream: "ITEM:pose_roi_from_landmarks"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_pose_roi_from_landmarks"
+}
+
+node {
+  calculator: "EndLoopLandmarkListVectorCalculator"
+  input_stream: "ITEM:pose_world_landmarks"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_pose_world_landmarks"
+}
+
+node {
+  calculator: "EndLoopNormalizedLandmarkListVectorCalculator"
+  input_stream: "POSE_LANDMARKS:pose_landmarks"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_pose_landmarks"
+}
+node {
+  calculator: "EndLoopNormalizedLandmarkListVectorCalculator"
+  input_stream: "FACE_LANDMARKS:face_landmarks"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_face_landmarks"
+}
+node {
+  calculator: "EndLoopNormalizedLandmarkListVectorCalculator"
+  input_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_left_hand_landmarks"
+}
+node {
+  calculator: "EndLoopNormalizedLandmarkListVectorCalculator"
+  input_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_right_hand_landmarks"
+}
+node {
+  calculator: "EndLoopNormalizedLandmarkListVectorCalculator"
+  input_stream: "SEGMENTATION_MASK:segmentation_mask"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_segmentation_mask"
+}

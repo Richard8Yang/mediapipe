@@ -82,6 +82,56 @@ objc_library(
     }),
 )
 
+ios_framework(
+    name = "HolisticTrackingMulti",
+    bundle_id = BUNDLE_ID_PREFIX + ".HolisticTrackingMulti",
+    families = ["iphone", "ipad"],
+    infoplists = [
+        "Info.plist",
+    ],
+    hdrs = [
+        "HolisticTrackerMulti.h",
+    ],
+    minimum_os_version = MIN_IOS_VERSION,
+    deps = [
+        ":HolisticTrackingGpuMultiLibrary",
+        "@ios_opencv//:OpencvFramework",
+    ],
+)
+
+objc_library(
+    name = "HolisticTrackingGpuMultiLibrary",
+    srcs = [
+        "HolisticTrackerMulti.mm",
+    ],
+    hdrs = [
+        "HolisticTrackerMulti.h",
+    ],
+    data = [
+        "//mediapipe/graphs/holistic_tracking:multi_holistic_tracking_gpu.binarypb",
+        "//mediapipe/modules/face_detection:face_detection_short_range.tflite",
+        "//mediapipe/modules/face_landmark:face_landmark.tflite",
+        "//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
+        "//mediapipe/modules/hand_landmark:hand_landmark_full.tflite",
+        "//mediapipe/modules/hand_landmark:hand_landmark_lite.tflite",
+        "//mediapipe/modules/hand_landmark:handedness.txt",
+        "//mediapipe/modules/holistic_landmark:hand_recrop.tflite",
+        "//mediapipe/modules/pose_detection:pose_detection.tflite",
+        "//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
+    ],
+    deps = [
+        "//mediapipe/objc:mediapipe_framework_ios",
+        "//mediapipe/objc:mediapipe_input_sources_ios",
+        "//mediapipe/objc:mediapipe_layer_renderer",
+    ] + select({
+        "//mediapipe:ios_i386": [],
+        "//mediapipe:ios_x86_64": [],
+        "//conditions:default": [
+            "//mediapipe/graphs/holistic_tracking:multi_holistic_tracking_gpu_deps",
+        ],
+    }),
+)
+
 ios_application(
     name = "HolisticTrackingGpuApp",
     app_icons = ["//mediapipe/examples/ios/common:AppIcon"],
