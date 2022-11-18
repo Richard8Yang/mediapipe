@@ -16,22 +16,22 @@ input_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
 input_stream: "FACE_LANDMARKS:face_landmarks"
 
 # Pose
-output_stream: "RENDER_DATA:landmarks_render_data"
-output_stream: "RENDER_DATA:landmarks_background_joints_render_data"
-output_stream: "RENDER_DATA:landmarks_left_joints_render_data"
-output_stream: "RENDER_DATA:landmarks_right_joints_render_data"
+output_stream: "RENDER_DATA_POSE:landmarks_render_data"
+output_stream: "RENDER_DATA_BGJOINTS:landmarks_background_joints_render_data"
+output_stream: "RENDER_DATA_LJOINTS:landmarks_left_joints_render_data"
+output_stream: "RENDER_DATA_RJOINTS:landmarks_right_joints_render_data"
 
 # Left hand.
-output_stream: "RENDER_DATA:left_hand_landmarks_connections_rd"
-output_stream: "RENDER_DATA:left_hand_landmarks_joints_rd"
+output_stream: "RENDER_DATA_LHCON:left_hand_landmarks_connections_rd"
+output_stream: "RENDER_DATA_LHJOINTS:left_hand_landmarks_joints_rd"
 
 # Right hand.
-output_stream: "RENDER_DATA:right_hand_landmarks_connections_rd"
-output_stream: "RENDER_DATA:right_hand_landmarks_joints_rd"
+output_stream: "RENDER_DATA_RHCON:right_hand_landmarks_connections_rd"
+output_stream: "RENDER_DATA_RHJOINTS:right_hand_landmarks_joints_rd"
 
 # Face.
-output_stream: "RENDER_DATA:face_landmarks_connections_rd"
-output_stream: "RENDER_DATA:face_landmarks_joints_rd"
+output_stream: "RENDER_DATA_FCON:face_landmarks_connections_rd"
+output_stream: "RENDER_DATA_FJOINTS:face_landmarks_joints_rd"
 
 # --------------------------------------------------------------------------- #
 # ------------------ Calculates scale for render objects -------------------- #
