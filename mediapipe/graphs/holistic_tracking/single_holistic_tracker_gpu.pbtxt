@@ -2,7 +2,7 @@ type: "SingleHolisticTrackerGpu"
 
 # GPU image. (GpuBuffer)
 input_stream: "IMAGE:image"
-input_stream: "SIZE:image_size"
+input_stream: "IMAGE_SIZE:image_size"
 
 # Regions of interest calculated based on pose detections. (NormalizedRect)
 input_stream: "ROI_FROM_DETECTION:pose_roi_from_detection"
@@ -55,8 +55,8 @@ node {
   input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
   input_stream: "IMAGE:image"
   input_stream: "IMAGE_SIZE:image_size"
-  input_stream: "ROI:pose_roi_from_detection"
-  output_stream: "POSE_LANDMARKS:pose_landmarks"
+  input_stream: "ROI_FROM_DETECTION:pose_roi_from_detection"
+  output_stream: "LANDMARKS:pose_landmarks"
   output_stream: "WORLD_LANDMARKS:pose_world_landmarks"
   output_stream: "SEGMENTATION_MASK:segmentation_mask"
   output_stream: "ROI_FROM_LANDMARKS:pose_roi_from_landmarks"

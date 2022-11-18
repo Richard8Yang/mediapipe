@@ -63,7 +63,9 @@ mediapipe_simple_subgraph(
     graph = "single_holistic_tracker_gpu.pbtxt",
     register_as = "SingleHolisticTrackerGpu",
     deps = [
-        # TODO:
+        "//mediapipe/calculators/core:split_proto_list_calculator",
+        "//mediapipe/modules/holistic_landmark:face_landmarks_from_pose_gpu",
+        "//mediapipe/modules/holistic_landmark:hand_landmarks_left_and_right_gpu",
         "//mediapipe/modules/holistic_landmark:single_pose_landmark_gpu",
     ],
 )
@@ -73,7 +75,11 @@ mediapipe_simple_subgraph(
     graph = "multi_holistic_tracker_gpu.pbtxt",
     register_as = "MultiHolisticTrackerGpu",
     deps = [
-        # TODO:
+        ":single_holistic_tracker_gpu",
+        ":multi_holistic_tracking_to_render_data",
+        "//mediapipe/calculators/image:image_properties_calculator",
+        "//mediapipe/calculators/core:begin_loop_calculator",
+        "//mediapipe/calculators/core:end_loop_calculator",
         "//mediapipe/modules/holistic_landmark:multi_pose_detector_gpu",
     ],
 )
