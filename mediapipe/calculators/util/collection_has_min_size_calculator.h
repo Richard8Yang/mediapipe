@@ -90,6 +90,58 @@ class CollectionHasMinSizeCalculator : public CalculatorBase {
   int min_size_ = 0;
 };
 
+template <typename IterableT>
+class MergeByLargerVectorCalculator : public CalculatorBase {
+ public:
+  static absl::Status GetContract(CalculatorContract* cc) {
+    CHECK_GE(cc->Inputs().NumEntries(), 1);
+    RET_CHECK_EQ(1, cc->Outputs().NumEntries());
+
+    for (CollectionItemId id = cc->Inputs().BeginId(); id < cc->Inputs().EndId();
+        ++id) {
+      auto tag_and_index = cc->Inputs().TagAndIndexFromId(id);
+      std::string tag = tag_and_index.first;
+      RET_CHECK_EQ("VECTOR", tag);
+      cc->Inputs().Get(id).Set<IterableT>();
+    }
+    cc->Outputs().Index(0).Set<IterableT>();
+
+    return absl::OkStatus();
+  }
+
+  absl::Status Open(CalculatorContext* cc) override {
+    cc->SetOffset(TimestampDiff(0));
+    return absl::OkStatus();
+  }
+
+  absl::Status Process(CalculatorContext* cc) override {
+    size_t maxSize = 0;
+    CollectionItemId selectedId;
+    for (CollectionItemId id = cc->Inputs().BeginId(); id < cc->Inputs().EndId();
+        ++id) {
+      auto tag_and_index = cc->Inputs().TagAndIndexFromId(id);
+      auto idx = tag_and_index.second;
+      const auto& input = cc->Inputs().Get(id);
+      if (input.IsEmpty()) {
+        continue;
+      }
+      const IterableT& vec = input.Get<IterableT>();
+      if (vec.size() > maxSize) {
+        selectedId = id;
+        maxSize = vec.size();
+      } else if (vec.size() == maxSize && idx == 0) {
+        selectedId = id;
+      }
+    }
+
+    if (maxSize > 0) {
+      cc->Outputs().Index(0).AddPacket(cc->Inputs().Get(selectedId).Value());
+    }
+
+    return absl::OkStatus();
+  }
+};
+
 }  // namespace mediapipe
 
 #endif  // MEDIAPIPE_CALCULATORS_UTIL_COLLECTION_HAS_MIN_SIZE_CALCULATOR_H_

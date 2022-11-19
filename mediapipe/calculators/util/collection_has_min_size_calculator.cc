@@ -37,4 +37,10 @@ typedef CollectionHasMinSizeCalculator<
     ClassificationListVectorHasMinSizeCalculator;
 REGISTER_CALCULATOR(ClassificationListVectorHasMinSizeCalculator);
 
+typedef MergeByLargerVectorCalculator<
+    std::vector<mediapipe::NormalizedRect>>
+    MergeByLargerNormalizedRectVectorCalculator;
+REGISTER_CALCULATOR(MergeByLargerNormalizedRectVectorCalculator);
+
+
 }  // namespace mediapipe

@@ -29,34 +29,10 @@ node {
   }
 }
 
-# Checks if there's previous pose rect calculated from landmarks.
-node: {
-  calculator: "PacketPresenceCalculator"
-  input_stream: "PACKET:gated_prev_pose_rect_from_landmarks"
-  output_stream: "PRESENCE:prev_pose_rect_from_landmarks_is_present"
-}
-
-# Drops the incoming image if the pose has already been identified from the
-# previous image. Otherwise, passes the incoming image through to trigger a new
-# round of pose detection.
-node {
-  calculator: "GateCalculator"
-  input_stream: "image"
-  input_stream: "image_size"
-  input_stream: "DISALLOW:prev_pose_rect_from_landmarks_is_present"
-  output_stream: "image_for_pose_detection"
-  output_stream: "image_size_for_pose_detection"
-  options: {
-    [mediapipe.GateCalculatorOptions.ext] {
-      empty_packets_as_allow: true
-    }
-  }
-}
-
 # Detects poses.
 node {
   calculator: "PoseDetectionGpu"
-  input_stream: "IMAGE:image_for_pose_detection"
+  input_stream: "IMAGE:image"
   output_stream: "DETECTIONS:pose_detections"
 }
 
@@ -68,7 +44,7 @@ node {
 node {
   calculator: "BeginLoopDetectionCalculator"
   input_stream: "ITERABLE:pose_detections"
-  input_stream: "CLONE:image_size_for_pose_detection"
+  input_stream: "CLONE:image_size"
   output_stream: "ITEM:pose_detection"
   output_stream: "CLONE:image_size_for_poses"
   output_stream: "BATCH_END:pose_detections_timestamp"
@@ -98,9 +74,9 @@ node {
 # detected landmarks if available (in this case, calculation of pose rect from
 # detection is skipped).
 node {
-  calculator: "MergeCalculator"
-  input_stream: "pose_rects_from_detections"
-  input_stream: "gated_prev_pose_rect_from_landmarks"
+  calculator: "MergeByLargerNormalizedRectVectorCalculator"
+  input_stream: "VECTOR:0:gated_prev_pose_rect_from_landmarks"
+  input_stream: "VECTOR:1:pose_rects_from_detections"
   output_stream: "multi_pose_roi_from_detection"
 }
 
