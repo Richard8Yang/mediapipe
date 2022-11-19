@@ -268,6 +268,7 @@ mediapipe_simple_subgraph(
         "//mediapipe/calculators/core:merge_calculator",
         "//mediapipe/calculators/core:packet_presence_calculator",
         "//mediapipe/calculators/core:previous_loopback_calculator",
+        "//mediapipe/calculators/util:collection_has_min_size_calculator",
         #"//mediapipe/calculators/core:split_vector_calculator",
         #"//mediapipe/calculators/image:image_properties_calculator",
         #"//mediapipe/calculators/util:from_image_calculator",
