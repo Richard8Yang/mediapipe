@@ -96,6 +96,8 @@ absl::Status AlignmentPointsRectsCalculator::DetectionToNormalizedRect(
   rect->set_width(box_size / image_size->first);
   rect->set_height(box_size / image_size->second);
 
+  //LOG(INFO) << "LandmarksToROI: " << x_center << ", " << y_center << "  " << rect->x_center() << ", " << rect->y_center();
+
   return absl::OkStatus();
 }
 

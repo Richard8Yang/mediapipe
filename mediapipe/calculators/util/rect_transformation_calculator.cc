@@ -136,6 +136,9 @@ absl::Status RectTransformationCalculator::Process(CalculatorContext* cc) {
   if (HasTagValue(cc->Inputs(), kNormRectTag) &&
       HasTagValue(cc->Inputs(), kImageSizeTag)) {
     auto rect = cc->Inputs().Tag(kNormRectTag).Get<NormalizedRect>();
+    //if (options_.scale_x() > 1.2 && options_.scale_x() < 1.3) {
+    //  LOG(INFO) << rect.x_center() << ", " << rect.y_center();
+    //}
     const auto& image_size =
         cc->Inputs().Tag(kImageSizeTag).Get<std::pair<int, int>>();
     TransformNormalizedRect(&rect, image_size.first, image_size.second);

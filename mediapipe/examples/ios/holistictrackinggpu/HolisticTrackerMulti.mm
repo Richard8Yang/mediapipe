@@ -63,6 +63,7 @@ static const char* kOutputStream = "output_video";
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(enableSeg)) named:"enable_segmentation"];
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(enableIris)) named:"refine_face_landmarks"];
     [newGraph setSidePacket:(mediapipe::MakePacket<int>(maxPersons)) named:"num_poses"];
+    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(false)) named:"smooth_landmarks"];
     [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
     //[newGraph addFrameOutputStream:kLandmarksOutputStream outputPacketType:MPPPacketTypeRaw];
     //[newGraph addFrameOutputStream:kRectOutputStream outputPacketType:MPPPacketTypeRaw];

@@ -178,7 +178,9 @@ absl::Status RectToRenderDataCalculator::Process(CalculatorContext* cc) {
       !cc->Inputs().Tag(kNormRectsTag).IsEmpty()) {
     const auto& rects =
         cc->Inputs().Tag(kNormRectsTag).Get<std::vector<NormalizedRect>>();
+    int i = 0;
     for (auto& rect : rects) {
+      //LOG(INFO) << "RectToRD: [" << i++ << "] " << rect.x_center() << ", " << rect.y_center();
       auto* rectangle = NewRect(options_, render_data.get());
       SetRect(/*normalized=*/true, rect.x_center() - rect.width() / 2.f,
               rect.y_center() - rect.height() / 2.f, rect.width(),
