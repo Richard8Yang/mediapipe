@@ -70,20 +70,6 @@ mediapipe_simple_subgraph(
     ],
 )
 
-mediapipe_simple_subgraph(
-    name = "multi_holistic_tracker_gpu",
-    graph = "multi_holistic_tracker_gpu.pbtxt",
-    register_as = "MultiHolisticTrackerGpu",
-    deps = [
-        ":single_holistic_tracker_gpu",
-        ":multi_holistic_tracking_to_render_data",
-        "//mediapipe/calculators/image:image_properties_calculator",
-        "//mediapipe/calculators/core:begin_loop_calculator",
-        "//mediapipe/calculators/core:end_loop_calculator",
-        "//mediapipe/modules/holistic_landmark:multi_pose_detector_gpu",
-    ],
-)
-
 cc_library(
     name = "holistic_tracking_gpu_deps",
     deps = [
@@ -111,7 +97,6 @@ cc_library(
     name = "multi_holistic_tracking_gpu_deps",
     deps = [
         ":single_holistic_tracker_gpu",
-        ":multi_holistic_tracker_gpu",
         ":multi_holistic_tracking_to_render_data",
         "//mediapipe/calculators/core:flow_limiter_calculator",
         "//mediapipe/calculators/core:begin_loop_calculator",
@@ -120,6 +105,7 @@ cc_library(
         "//mediapipe/calculators/util:annotation_overlay_calculator",
         "//mediapipe/calculators/util:landmarks_to_render_data_calculator",
         "//mediapipe/calculators/image:recolor_calculator",
+        "//mediapipe/modules/holistic_landmark:multi_pose_detector_gpu",
     ],
 )
 
