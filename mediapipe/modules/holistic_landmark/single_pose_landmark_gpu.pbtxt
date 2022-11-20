@@ -91,7 +91,7 @@ node {
   output_stream: "LANDMARKS:pose_landmarks"
   output_stream: "AUXILIARY_LANDMARKS:auxiliary_landmarks"
   output_stream: "WORLD_LANDMARKS:pose_world_landmarks"
-  output_stream: "SEGMENTATION_MASK:unfiltered_segmentation_mask"
+  output_stream: "SEGMENTATION_MASK:filtered_segmentation_mask"
 }
 
 # Calculates region of interest based on the auxiliary landmarks, to be used in
@@ -101,14 +101,6 @@ node {
   input_stream: "LANDMARKS:auxiliary_landmarks"
   input_stream: "IMAGE_SIZE:image_size"
   output_stream: "ROI:pose_roi_from_landmarks"
-}
-
-# Smoothes segmentation to reduce jitter.
-node {
-  calculator: "PoseSegmentationFiltering"
-  input_side_packet: "ENABLE:smooth_segmentation"
-  input_stream: "SEGMENTATION_MASK:unfiltered_segmentation_mask"
-  output_stream: "FILTERED_SEGMENTATION_MASK:filtered_segmentation_mask"
 }
 
 # Converts the incoming segmentation mask represented as an Image into the
