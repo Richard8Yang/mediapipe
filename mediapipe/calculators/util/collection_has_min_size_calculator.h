@@ -16,6 +16,7 @@
 #define MEDIAPIPE_CALCULATORS_UTIL_COLLECTION_HAS_MIN_SIZE_CALCULATOR_H_
 
 #include <vector>
+#include <set>
 
 #include "mediapipe/calculators/util/collection_has_min_size_calculator.pb.h"
 #include "mediapipe/framework/calculator_framework.h"
@@ -140,6 +141,18 @@ class MergeByLargerVectorCalculator : public CalculatorBase {
 
     return absl::OkStatus();
   }
+};
+
+class MergeRoiVectorsCalculator : public CalculatorBase {
+ public:
+  static absl::Status GetContract(CalculatorContract* cc);
+
+  absl::Status Open(CalculatorContext* cc) override {
+    cc->SetOffset(TimestampDiff(0));
+    return absl::OkStatus();
+  }
+
+  absl::Status Process(CalculatorContext* cc) override;
 };
 
 }  // namespace mediapipe

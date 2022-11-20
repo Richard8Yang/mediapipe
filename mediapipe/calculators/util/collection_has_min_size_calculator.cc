@@ -42,5 +42,55 @@ typedef MergeByLargerVectorCalculator<
     MergeByLargerNormalizedRectVectorCalculator;
 REGISTER_CALCULATOR(MergeByLargerNormalizedRectVectorCalculator);
 
+// MergeRoiVectorsCalculator
+absl::Status MergeRoiVectorsCalculator::GetContract(CalculatorContract* cc) {
+    RET_CHECK_EQ(2, cc->Inputs().NumEntries());
+    RET_CHECK_EQ(1, cc->Outputs().NumEntries());
+    RET_CHECK(cc->Inputs().HasTag("RECTS_FROM_LANDMARKS"));
+    RET_CHECK(cc->Inputs().HasTag("RECTS_FROM_DETECTION"));
+
+    cc->Inputs().Tag("RECTS_FROM_LANDMARKS").Set<std::vector<mediapipe::NormalizedRect>>();
+    cc->Inputs().Tag("RECTS_FROM_DETECTION").Set<std::vector<mediapipe::NormalizedRect>>();
+    cc->Outputs().Index(0).Set<std::vector<mediapipe::NormalizedRect>>();
+
+    return absl::OkStatus();
+}
+
+absl::Status MergeRoiVectorsCalculator::Process(CalculatorContext* cc) {
+    if (!cc->Inputs().Tag("RECTS_FROM_LANDMARKS").IsEmpty() && !cc->Inputs().Tag("RECTS_FROM_DETECTION").IsEmpty()) {
+        const auto& roiVecFromLandmarks = cc->Inputs().Tag("RECTS_FROM_LANDMARKS").Get<std::vector<mediapipe::NormalizedRect>>();
+        const auto& roiVecFromDetection = cc->Inputs().Tag("RECTS_FROM_DETECTION").Get<std::vector<mediapipe::NormalizedRect>>();
+        if (roiVecFromDetection.size() > roiVecFromLandmarks.size()) {
+            cc->Outputs().Index(0).AddPacket(cc->Inputs().Tag("RECTS_FROM_DETECTION").Value());
+        } else if (roiVecFromLandmarks.size() == 1) {
+            cc->Outputs().Index(0).AddPacket(cc->Inputs().Tag("RECTS_FROM_LANDMARKS").Value());
+        } else {
+            // Check rois from landmarkd if there are rects that are too close
+            // Detect centers of the rects, the diff should be less than 1/100
+            const int magnifyCoef = 100;
+            std::set<int> uniqueCenters;
+            for (const auto& rc : roiVecFromLandmarks) {
+                int key = rc.x_center() * magnifyCoef;
+                key = (key << 8) + rc.y_center() * magnifyCoef;
+                uniqueCenters.insert(key);
+            }
+            if (uniqueCenters.size() < roiVecFromLandmarks.size()) {
+                LOG(WARNING) << "Found same duplicate ROI, new count " << uniqueCenters.size() << " <- " << roiVecFromLandmarks.size();
+                cc->Outputs().Index(0).AddPacket(cc->Inputs().Tag("RECTS_FROM_DETECTION").Value());
+            } else {
+                cc->Outputs().Index(0).AddPacket(cc->Inputs().Tag("RECTS_FROM_LANDMARKS").Value());
+            }
+        }
+    } else if (cc->Inputs().Tag("RECTS_FROM_LANDMARKS").IsEmpty()) {
+        cc->Outputs().Index(0).AddPacket(cc->Inputs().Tag("RECTS_FROM_DETECTION").Value());
+    } else {
+        cc->Outputs().Index(0).AddPacket(cc->Inputs().Tag("RECTS_FROM_LANDMARKS").Value());
+    }
+    
+
+    return absl::OkStatus();
+}
+
+REGISTER_CALCULATOR(MergeRoiVectorsCalculator);
 
 }  // namespace mediapipe
