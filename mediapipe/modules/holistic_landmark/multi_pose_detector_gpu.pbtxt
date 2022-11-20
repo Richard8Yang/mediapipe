@@ -74,9 +74,9 @@ node {
 # detected landmarks if available (in this case, calculation of pose rect from
 # detection is skipped).
 node {
-  calculator: "MergeByLargerNormalizedRectVectorCalculator"
-  input_stream: "VECTOR:0:gated_prev_pose_rect_from_landmarks"
-  input_stream: "VECTOR:1:pose_rects_from_detections"
+  calculator: "MergeRoiVectorsCalculator"
+  input_stream: "RECTS_FROM_LANDMARKS:gated_prev_pose_rect_from_landmarks"
+  input_stream: "RECTS_FROM_DETECTION:pose_rects_from_detections"
   output_stream: "multi_pose_roi_from_detection"
 }
 

@@ -1,3 +1,8 @@
-.vscode
+*.vscode
 *.gradle
+*.DS_Store
 get-pip.py
+bazel-bin
+bazel-mediapipe
+bazel-out
+bazel-testlogs
