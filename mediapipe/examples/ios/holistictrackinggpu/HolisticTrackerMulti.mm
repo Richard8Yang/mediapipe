@@ -5,17 +5,14 @@
 #include "mediapipe/framework/formats/landmark.pb.h"
 #include "mediapipe/framework/formats/rect.pb.h"
 #include "mediapipe/framework/formats/classification.pb.h"
-//static NSString* const kGraphName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GraphName"];//@"hand_tracking_mobile_gpu";
-//static const char* kInputStream = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GraphInputStream"];//"input_video";
-//static const char* kOutputStream = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"GraphOutputStream"];//"output_video";
-//static const char* kCameraFacing = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CameraPosition"];
-static NSString* const kGraphName = @"multi_holistic_tracking_gpu";
-static const char* kInputStream = "input_video";
-static const char* kOutputStream = "output_video";
-//static const char* kRectOutputStream = "hand_rect_from_landmarks";
-//static const char* kLandmarksOutputStream = "hand_landmarks";
-//static const char* kHandednessOutputStream = "handedness";
-//static const char* kVideoQueueLabel = "com.google.mediapipe.example.videoQueue";
+static NSString* const kGraphName           = @"multi_holistic_tracking_gpu";
+static const char* kInputStream             = "input_video";
+static const char* kOutputStream            = "output_video";
+static const char* kMultiFaceStream         = "multi_face_landmarks";
+static const char* kMultiLeftHandStream     = "multi_left_hand_landmarks";
+static const char* kMultiRightHandStream    = "multi_right_hand_landmarks";
+static const char* kMultiPoseStream         = "multi_pose_landmarks";
+static const char* kMultiPoseWorldStream    = "multi_pose_world_landmarks";
 
 @interface HolisticTracker() <MPPGraphDelegate>
 {
@@ -65,9 +62,11 @@ static const char* kOutputStream = "output_video";
     [newGraph setSidePacket:(mediapipe::MakePacket<int>(maxPersons)) named:"num_poses"];
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(false)) named:"smooth_landmarks"];
     [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
-    //[newGraph addFrameOutputStream:kLandmarksOutputStream outputPacketType:MPPPacketTypeRaw];
-    //[newGraph addFrameOutputStream:kRectOutputStream outputPacketType:MPPPacketTypeRaw];
-    //[newGraph addFrameOutputStream:kHandednessOutputStream outputPacketType:MPPPacketTypeRaw];
+    [newGraph addFrameOutputStream:kMultiFaceStream outputPacketType:MPPPacketTypeRaw];
+    [newGraph addFrameOutputStream:kMultiLeftHandStream outputPacketType:MPPPacketTypeRaw];
+    [newGraph addFrameOutputStream:kMultiRightHandStream outputPacketType:MPPPacketTypeRaw];
+    [newGraph addFrameOutputStream:kMultiPoseStream outputPacketType:MPPPacketTypeRaw];
+    [newGraph addFrameOutputStream:kMultiPoseWorldStream outputPacketType:MPPPacketTypeRaw];
 
     return newGraph;
 }
@@ -93,6 +92,12 @@ static const char* kOutputStream = "output_video";
 
 #pragma mark - MPPGraphDelegate methods
 
+- (void)processVideoFrame:(CVPixelBufferRef)imageBuffer {
+    [self.mediapipeGraph sendPixelBuffer:imageBuffer
+                              intoStream:kInputStream
+                              packetType:MPPPacketTypePixelBuffer];
+}
+
 // Receives CVPixelBufferRef from the MediaPipe graph. Invoked on a MediaPipe worker thread.
 - (void)mediapipeGraph:(MPPGraph*)graph
   didOutputPixelBuffer:(CVPixelBufferRef)pixelBuffer
@@ -106,30 +111,23 @@ static const char* kOutputStream = "output_video";
 - (void)mediapipeGraph:(MPPGraph*)graph
        didOutputPacket:(const ::mediapipe::Packet&)packet
             fromStream:(const std::string&)streamName {
-    /*if (streamName == kLandmarksOutputStream) {
+    if (streamName == kMultiFaceStream || 
+        streamName == kMultiLeftHandStream || 
+        streamName == kMultiRightHandStream || 
+        streamName == kMultiPoseStream || 
+        streamName == kMultiPoseWorldStream) {
+        // Landmarks array
         if (packet.IsEmpty()) { return; }
         const auto& landmarks = packet.Get<::mediapipe::NormalizedLandmarkList>();
-                
-        NSMutableArray<HTLandmark *> *result = [NSMutableArray array];
-        
+        NSMutableArray<Landmark *> *result = [NSMutableArray array];
         for (int i = 0; i < landmarks.landmark_size(); ++i) {
-            HTLandmark *landmark = [[HTLandmark alloc] initWithX:landmarks.landmark(i).x()
+            Landmark *landmark = [[HTLandmark alloc] initWithX:landmarks.landmark(i).x()
                                                              y:landmarks.landmark(i).y()
                                                              z:landmarks.landmark(i).z()];
             [result addObject:landmark];
         }
-        if (!CGSizeEqualToSize(lastHandSize, CGSizeZero) && self.currentHandedness != HTHandednessUnknown) {
-            HTHandInfo *info = [[HTHandInfo alloc] initWithLandmarks:result.copy andHandSize:lastHandSize andIsRightHand:self.currentHandedness == HTHandednessRight andHandednessScore:self.currentHandedness];
-            
-            [_delegate holisticTracker:self didOutputHandInfo:info];
-        }
-    }*/
-}
-
-- (void)processVideoFrame:(CVPixelBufferRef)imageBuffer {
-    [self.mediapipeGraph sendPixelBuffer:imageBuffer
-                              intoStream:kInputStream
-                              packetType:MPPPacketTypePixelBuffer];
+        [_delegate holisticTracker: self didOutputLandmarks: result];
+    }
 }
 
 @end
