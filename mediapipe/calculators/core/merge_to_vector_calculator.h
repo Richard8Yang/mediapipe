@@ -46,7 +46,7 @@ class MergeToVectorCalculator : public Node {
     const int input_num = kIn(cc).Count();
     std::vector<T> output_vector(input_num);
     std::transform(kIn(cc).begin(), kIn(cc).end(), output_vector.begin(),
-                   [](const auto& elem) -> T { return elem.Get(); });
+                   [](const auto& elem) -> T { return elem.IsEmpty() ? T() : elem.Get(); });
     kOut(cc).Send(output_vector);
     return absl::OkStatus();
   }
