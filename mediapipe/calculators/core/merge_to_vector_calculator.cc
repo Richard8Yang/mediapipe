@@ -16,12 +16,16 @@ limitations under the License.
 #include "mediapipe/calculators/core/merge_to_vector_calculator.h"
 
 #include "mediapipe/framework/formats/image.h"
+#include "mediapipe/framework/formats/landmark.pb.h"
 
 namespace mediapipe {
 namespace api2 {
 
 typedef MergeToVectorCalculator<mediapipe::Image> MergeImagesToVectorCalculator;
 MEDIAPIPE_REGISTER_NODE(MergeImagesToVectorCalculator);
+
+typedef MergeToVectorCalculator<mediapipe::NormalizedLandmarkList> MergeLandmarksToVectorCalculator;
+MEDIAPIPE_REGISTER_NODE(MergeLandmarksToVectorCalculator);
 
 }  // namespace api2
 }  // namespace mediapipe

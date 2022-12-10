@@ -62,4 +62,9 @@ REGISTER_CALCULATOR(EndLoopDetectionCalculator);
 typedef EndLoopCalculator<std::vector<Matrix>> EndLoopMatrixCalculator;
 REGISTER_CALCULATOR(EndLoopMatrixCalculator);
 
+using NormalizedLandmarksArray = std::vector<::mediapipe::NormalizedLandmarkList>;
+typedef EndLoopCalculator<std::vector<NormalizedLandmarksArray>>
+    EndLoopNormalizedLandmarksArrayVectorCalculator;
+REGISTER_CALCULATOR(EndLoopNormalizedLandmarksArrayVectorCalculator);
+
 }  // namespace mediapipe
