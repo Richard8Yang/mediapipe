@@ -101,6 +101,7 @@ cc_library(
         "//mediapipe/calculators/core:flow_limiter_calculator",
         "//mediapipe/calculators/core:begin_loop_calculator",
         "//mediapipe/calculators/core:end_loop_calculator",
+        "//mediapipe/calculators/core:merge_to_vector_calculator",
         "//mediapipe/calculators/image:image_properties_calculator",
         "//mediapipe/calculators/util:annotation_overlay_calculator",
         "//mediapipe/calculators/util:landmarks_to_render_data_calculator",
