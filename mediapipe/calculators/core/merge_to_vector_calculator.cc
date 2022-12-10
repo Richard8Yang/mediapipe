@@ -17,6 +17,7 @@ limitations under the License.
 
 #include "mediapipe/framework/formats/detection.pb.h"
 #include "mediapipe/framework/formats/image.h"
+#include "mediapipe/framework/formats/landmark.pb.h"
 
 namespace mediapipe {
 namespace api2 {
@@ -31,6 +32,9 @@ MEDIAPIPE_REGISTER_NODE(MergeGpuBuffersToVectorCalculator);
 typedef MergeToVectorCalculator<mediapipe::Detection>
     MergeDetectionsToVectorCalculator;
 MEDIAPIPE_REGISTER_NODE(MergeDetectionsToVectorCalculator);
+
+typedef MergeToVectorCalculator<mediapipe::NormalizedLandmarkList> MergeLandmarksToVectorCalculator;
+MEDIAPIPE_REGISTER_NODE(MergeLandmarksToVectorCalculator);
 
 }  // namespace api2
 }  // namespace mediapipe

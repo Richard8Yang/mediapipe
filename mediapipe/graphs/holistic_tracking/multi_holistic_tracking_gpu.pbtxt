@@ -88,6 +88,26 @@ node {
   output_stream: "ROI_FROM_LANDMARKS:pose_roi_from_landmarks"
 }
 
+# Merge all landmarks to holistic landmarks vector that contains 
+# input stream in a vector in the original order: vector<NormalizedLandmarks>
+node {
+  calculator: "MergeLandmarksToVectorCalculator"
+  input_stream: "face_landmarks"
+  input_stream: "pose_landmarks"
+  input_stream: "left_hand_landmarks"
+  input_stream: "right_hand_landmarks"
+  #input_stream: "pose_world_landmarks"
+  output_stream: "ITERABLE:holistic_landmarks_array"
+}
+
+# Output is kind of 2D array of landmarks: vector<vector<NormalizedLandmarks>>
+node {
+  calculator: "EndLoopNormalizedLandmarksArrayVectorCalculator"
+  input_stream: "ITEM:holistic_landmarks_array"
+  input_stream: "BATCH_END:pose_rects_timestamp"
+  output_stream: "ITERABLE:multi_holistic_landmarks_array"
+}
+
 # Converts pose, hands and face landmarks to a render data vector.
 node {
   calculator: "MultiHolisticTrackingToRenderData"

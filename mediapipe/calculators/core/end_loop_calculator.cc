@@ -90,4 +90,9 @@ typedef EndLoopCalculator<std::vector<std::pair<int, int>>>
     EndLoopImageSizeCalculator;
 REGISTER_CALCULATOR(EndLoopImageSizeCalculator);
 
+using NormalizedLandmarksArray = std::vector<::mediapipe::NormalizedLandmarkList>;
+typedef EndLoopCalculator<std::vector<NormalizedLandmarksArray>>
+    EndLoopNormalizedLandmarksArrayVectorCalculator;
+REGISTER_CALCULATOR(EndLoopNormalizedLandmarksArrayVectorCalculator);
+
 }  // namespace mediapipe

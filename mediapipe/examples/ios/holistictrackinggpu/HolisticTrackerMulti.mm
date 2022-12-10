@@ -8,11 +8,51 @@
 static NSString* const kGraphName           = @"multi_holistic_tracking_gpu";
 static const char* kInputStream             = "input_video";
 static const char* kOutputStream            = "output_video";
+
+// vector<mediapipe::LandmarkList>
+static const char* kMultiPoseWorldStream    = "multi_pose_world_landmarks";
+
+// vector<mediapipe::NormalizedLandmarkList>
 static const char* kMultiFaceStream         = "multi_face_landmarks";
+static const char* kMultiPoseStream         = "multi_pose_landmarks";
 static const char* kMultiLeftHandStream     = "multi_left_hand_landmarks";
 static const char* kMultiRightHandStream    = "multi_right_hand_landmarks";
-static const char* kMultiPoseStream         = "multi_pose_landmarks";
-static const char* kMultiPoseWorldStream    = "multi_pose_world_landmarks";
+
+// vector<vector<mediapipe::NormalizedLandmarkList>> in the order of < face->pose->lefthand->righthand > landmarks
+static const char* kMultiHolisticStream     = "multi_holistic_landmarks_array";
+
+static const id kLandmarkTypeNames[] = { @"face", @"pose", @"lefthand", @"righthand" };
+static NSUInteger kLandmarkTypeCount = sizeof(kLandmarkTypeNames) / sizeof(id);
+static NSArray *kHolisticLandmarkNames = [NSArray arrayWithObjects:kLandmarkTypeNames count:kLandmarkTypeCount];
+
+@implementation HolisticTrackerConfig
+- (void)init: (bool)enableSegmentation
+    enableRefinedFace: (bool)enableRefinedFace
+    maxPersonsToTrack: (int)maxPersonsToTrack
+    enableFaceLandmarks: (bool)enableFaceLandmarks
+    enablePoseLandmarks: (bool)enablePoseLandmarks
+    enableLeftHandLandmarks: (bool)enableLeftHandLandmarks
+    enableRightHandLandmarks: (bool)enableRightHandLandmarks
+    enableHolisticLandmarks: (bool)enableHolisticLandmarks
+    enablePoseWorldLandmarks: (bool)enablePoseWorldLandmarks
+    enablePixelBufferOutput: (bool)enablePixelBufferOutput
+{
+    self = [super init];
+    if (self) {
+        _enableSegmentation         = enableSegmentation;
+        _enableRefinedFace          = enableRefinedFace;
+        _maxPersonsToTrack          = maxPersonsToTrack;
+        _enableFaceLandmarks        = enableFaceLandmarks;
+        _enablePoseLandmarks        = enablePoseLandmarks;
+        _enableLeftHandLandmarks    = enableLeftHandLandmarks;
+        _enableRightHandLandmarks   = enableRightHandLandmarks;
+        _enableHolisticLandmarks    = enableHolisticLandmarks;
+        _enablePoseWorldLandmarks   = enablePoseWorldLandmarks;
+        _enablePixelBufferOutput    = enablePixelBufferOutput;
+    }
+    return self;
+}
+@end
 
 @interface HolisticTracker() <MPPGraphDelegate>
 {
@@ -35,9 +75,7 @@ static const char* kMultiPoseWorldStream    = "multi_pose_world_landmarks";
 #pragma mark - MediaPipe graph methods
 
 + (MPPGraph*)loadGraphFromResource: (NSString*)resource
-                enableSegmentation: (bool)enableSeg
-                 enableRefinedFace: (bool)enableIris
-                  maxDetectPersons: (int)maxPersons {
+                    trackingConfig: (HolisticTrackerConfig *)params {
     // Load the graph config resource.
     NSError* configLoadError = nil;
     NSBundle* bundle = [NSBundle bundleForClass:[self class]];
@@ -57,24 +95,39 @@ static const char* kMultiPoseWorldStream    = "multi_pose_world_landmarks";
     
     // Create MediaPipe graph with mediapipe::CalculatorGraphConfig proto object.
     MPPGraph* newGraph = [[MPPGraph alloc] initWithGraphConfig:config];
-    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(enableSeg)) named:"enable_segmentation"];
-    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(enableIris)) named:"refine_face_landmarks"];
-    [newGraph setSidePacket:(mediapipe::MakePacket<int>(maxPersons)) named:"num_poses"];
+    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(params.enableSegmentation)) named:"enable_segmentation"];
+    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(params.enableRefinedFace)) named:"refine_face_landmarks"];
+    [newGraph setSidePacket:(mediapipe::MakePacket<int>(params.maxPersonsToTrack)) named:"num_poses"];
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(false)) named:"smooth_landmarks"];
-    [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
-    [newGraph addFrameOutputStream:kMultiFaceStream outputPacketType:MPPPacketTypeRaw];
-    [newGraph addFrameOutputStream:kMultiLeftHandStream outputPacketType:MPPPacketTypeRaw];
-    [newGraph addFrameOutputStream:kMultiRightHandStream outputPacketType:MPPPacketTypeRaw];
-    [newGraph addFrameOutputStream:kMultiPoseStream outputPacketType:MPPPacketTypeRaw];
-    [newGraph addFrameOutputStream:kMultiPoseWorldStream outputPacketType:MPPPacketTypeRaw];
+    if (params.enablePixelBufferOutput) {
+        [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
+    }
+    if (params.enableFaceLandmarks) {
+        [newGraph addFrameOutputStream:kMultiFaceStream outputPacketType:MPPPacketTypeRaw];
+    }
+    if (params.enableLeftHandLandmarks) {
+        [newGraph addFrameOutputStream:kMultiLeftHandStream outputPacketType:MPPPacketTypeRaw];
+    }
+    if (params.enableRightHandLandmarks) {
+        [newGraph addFrameOutputStream:kMultiRightHandStream outputPacketType:MPPPacketTypeRaw];
+    }
+    if (params.enablePoseLandmarks) {
+        [newGraph addFrameOutputStream:kMultiPoseStream outputPacketType:MPPPacketTypeRaw];
+    }
+    if (params.enablePoseWorldLandmarks) {
+        [newGraph addFrameOutputStream:kMultiPoseWorldStream outputPacketType:MPPPacketTypeRaw];
+    }
+    if (params.enableHolisticLandmarks) {
+        [newGraph addFrameOutputStream:kMultiHolisticStream outputPacketType:MPPPacketTypeRaw];
+    }
 
     return newGraph;
 }
 
-- (instancetype)init:(bool)enableSegmentation enableRefinedFace: (bool)enableIris maxDetectPersons: (int)maxPersons {
+- (instancetype)init: (HolisticTrackerConfig *)params {
     self = [super init];
     if (self) {
-        self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName enableSegmentation:enableSegmentation enableRefinedFace:enableIris maxDetectPersons:maxPersons];
+        self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName trackingConfig:params];
         self.mediapipeGraph.delegate = self;
         // Set maxFramesInFlight to a small value to avoid memory contention for real-time processing.
         self.mediapipeGraph.maxFramesInFlight = 2;
@@ -111,23 +164,95 @@ static const char* kMultiPoseWorldStream    = "multi_pose_world_landmarks";
 - (void)mediapipeGraph:(MPPGraph*)graph
        didOutputPacket:(const ::mediapipe::Packet&)packet
             fromStream:(const std::string&)streamName {
-    if (streamName == kMultiFaceStream || 
-        streamName == kMultiLeftHandStream || 
-        streamName == kMultiRightHandStream || 
-        streamName == kMultiPoseStream || 
-        streamName == kMultiPoseWorldStream) {
-        // Landmarks array
-        if (packet.IsEmpty()) { return; }
-        const auto& landmarks = packet.Get<::mediapipe::NormalizedLandmarkList>();
-        NSMutableArray<Landmark *> *result = [NSMutableArray array];
-        for (int i = 0; i < landmarks.landmark_size(); ++i) {
-            Landmark *landmark = [[HTLandmark alloc] initWithX:landmarks.landmark(i).x()
-                                                             y:landmarks.landmark(i).y()
-                                                             z:landmarks.landmark(i).z()];
-            [result addObject:landmark];
+    if (packet.IsEmpty()) { return; }
+    if (streamName == kMultiFaceStream || streamName == kMultiPoseStream || 
+        streamName == kMultiLeftHandStream || streamName == kMultiRightHandStream) {
+        // vector<mediapipe::NormalizedLandmarkList>
+        // Returns NSDictionary with index as the key, value of type NSDictionary<NSArray<Landmark>>
+        const auto& multiLandmarks = packet.Get<std::vector<::mediapipe::NormalizedLandmarkList>>();
+        NSMutableDictionary *result = [NSMutableDictionary dictionary];
+        for (int idx = 0; idx < multiLandmarks.size(); ++idx) {
+            const auto& landmarks = multiLandmarks[idx];
+            NSMutableArray<Landmark *> *landmarkArray = [NSMutableArray array];
+            for (int i = 0; i < landmarks.landmark_size(); ++i) {
+                Landmark *landmark = [[Landmark alloc]  initWithX:landmarks.landmark(i).x()
+                                                                y:landmarks.landmark(i).y()
+                                                                z:landmarks.landmark(i).z()];
+                [landmarkArray addObject:landmark];
+                [landmark release];
+            }
+            [result setObject:landmarkArray forKey:[NSNumber numberWithInt:idx]];
+            [landmarkArray release];
         }
-        [_delegate holisticTracker: self didOutputLandmarks: result];
+        [_delegate holisticTracker: self didOutputLandmarks:streamName packetData:result];
+        [result removeAllObjects];
+        [result release];
+    } else if (streamName == kMultiHolisticStream) {
+        // vector<vector<mediapipe::NormalizedLandmarkList>>
+        // Returns NSDictionary with index as the key, value of type NSDictionary<NSDictionary<NSString, NSArray<Landmark>>>
+        const auto& multiLandmarks = packet.Get<std::vector<std::vector<::mediapipe::NormalizedLandmarkList>>>();
+        NSMutableDictionary *result = [NSMutableDictionary dictionary];
+        for (int idx = 0; idx < multiLandmarks.size(); ++idx) {
+            NSMutableDictionary *holistic = [NSMutableDictionary dictionary];
+            const auto& holisticLandmarksArray = multiLandmarks[idx];
+            if (holisticLandmarksArray.size() != kLandmarkTypeCount) {
+                NSLog(@"Wrong number (%d) of landmark types for holistic landmarks %d", holisticLandmarksArray.size(), idx);
+                continue;
+            }
+            for (int landmarkTypeIdx = 0; landmarkTypeIdx < holisticLandmarksArray.size(); ++landmarkTypeIdx) {
+                const auto& landmarks = holisticLandmarksArray[landmarkTypeIdx];
+                NSMutableArray<Landmark *> *landmarkArray = [NSMutableArray array];
+                for (int i = 0; i < landmarks.landmark_size(); ++i) {
+                    Landmark *landmark = [[Landmark alloc]  initWithX:landmarks.landmark(i).x()
+                                                                    y:landmarks.landmark(i).y()
+                                                                    z:landmarks.landmark(i).z()];
+                    [landmarkArray addObject:landmark];
+                    [landmark release];
+                }
+                [holistic setObject:landmarkArray forKey:kHolisticLandmarkNames[landmarkTypeIdx]];
+                [landmarkArray release];
+            }
+            [result setObject:holistic forKey:[NSNumber numberWithInt:idx]];
+        }
+        [_delegate holisticTracker: self didOutputLandmarks:streamName packetData:result];
+        [result removeAllObjects];
+        [result release];
+    } else if (streamName == kMultiPoseWorldStream) {
+        // vector<mediapipe::LandmarkList>
+        // Returns NSDictionary with index as the key, value of type NSDictionary<NSArray<Landmark>>
+        const auto& multiLandmarks = packet.Get<std::vector<::mediapipe::LandmarkList>>();
+        NSMutableDictionary *result = [NSMutableDictionary dictionary];
+        for (int idx = 0; idx < multiLandmarks.size(); ++idx) {
+            const auto& landmarks = multiLandmarks[idx];
+            NSMutableArray<Landmark *> *landmarkArray = [NSMutableArray array];
+            for (int i = 0; i < landmarks.landmark_size(); ++i) {
+                Landmark *landmark = [[Landmark alloc]  initWithX:landmarks.landmark(i).x()
+                                                                y:landmarks.landmark(i).y()
+                                                                z:landmarks.landmark(i).z()];
+                [landmarkArray addObject:landmark];
+                [landmark release];
+            }
+            [result setObject:landmarkArray forKey:[NSNumber numberWithInt:idx]];
+            [landmarkArray release];
+        }
+        [_delegate holisticTracker: self didOutputLandmarks:streamName packetData:result];
+        [result removeAllObjects];
+        [result release];
+    } else {
+        // Unsupported stream
     }
 }
+
+@implementation Landmark
+- (instancetype)initWithX:(float)x y:(float)y z:(float)z {
+    self = [super init];
+    if (self) {
+        _x = x;
+        _y = y;
+        _z = z;
+    }
+    return self;
+}
+@end
 
 @end
