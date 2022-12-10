@@ -1404,6 +1404,7 @@ cc_library(
         "//mediapipe/framework/api2:port",
         "//mediapipe/framework/formats:detection_cc_proto",
         "//mediapipe/framework/formats:image",
+        "//mediapipe/framework/formats:landmark_cc_proto",
         "@com_google_absl//absl/status",
     ],
     alwayslink = 1,

@@ -1,12 +1,26 @@
 #import <Foundation/Foundation.h>
 #import <CoreVideo/CoreVideo.h>
 
+// vector<mediapipe::LandmarkList>
+static const char* kMultiPoseWorldStream    = "multi_pose_world_landmarks";
+
+// vector<mediapipe::NormalizedLandmarkList>
+static const char* kMultiFaceStream         = "multi_face_landmarks";
+static const char* kMultiPoseStream         = "multi_pose_landmarks";
+static const char* kMultiLeftHandStream     = "multi_left_hand_landmarks";
+static const char* kMultiRightHandStream    = "multi_right_hand_landmarks";
+
+// vector<vector<mediapipe::NormalizedLandmarkList>> in the order of < face->pose->lefthand->righthand > landmarks
+static const char* kMultiHolisticStream     = "multi_holistic_landmarks_array";
+
+static const id kLandmarkTypeNames[] = { @"face", @"pose", @"lefthand", @"righthand" };
+
 @class HolisticTracker;
 @class Landmark;
 
 @protocol TrackerDelegate <NSObject>
 - (void)holisticTracker: (HolisticTracker*)holisticTracker didOutputPixelBuffer: (CVPixelBufferRef)pixelBuffer;
-- (void)holisticTracker: (HolisticTracker*)holisticTracker didOutputPacket: (const std::string&)name packetData: (NSDictionary *)packet;
+- (void)holisticTracker: (HolisticTracker*)holisticTracker didOutputLandmarks: (NSString *)name packetData: (NSDictionary *)packet;
 @end
 
 @interface HolisticTrackerConfig: NSObject
@@ -21,7 +35,7 @@
 @property(nonatomic, readonly) bool enablePoseWorldLandmarks;
 @property(nonatomic, readonly) bool enablePixelBufferOutput;
 
-- (void)init: (bool)enableSegmentation
+- (instancetype)init: (bool)enableSegmentation
     enableRefinedFace: (bool)enableRefinedFace
     maxPersonsToTrack: (int)maxPersonsToTrack
     enableFaceLandmarks: (bool)enableFaceLandmarks

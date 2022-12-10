@@ -97,7 +97,7 @@ node {
   input_stream: "left_hand_landmarks"
   input_stream: "right_hand_landmarks"
   #input_stream: "pose_world_landmarks"
-  output_stream: "ITERABLE:holistic_landmarks_array"
+  output_stream: "holistic_landmarks_array"
 }
 
 # Output is kind of 2D array of landmarks: vector<vector<NormalizedLandmarks>>
