@@ -48,13 +48,10 @@ class MergeToVectorCalculator : public Node {
   }
 
   absl::Status Process(CalculatorContext* cc) {
-    std::vector<T> output_vector;
-    for (auto it = kIn(cc).begin(); it != kIn(cc).end(); it++) {
-      const auto& elem = *it;
-      if (!elem.IsEmpty()) {
-        output_vector.push_back(elem.Get());
-      }
-    }
+    const int input_num = kIn(cc).Count();
+    std::vector<T> output_vector(input_num);
+    std::transform(kIn(cc).begin(), kIn(cc).end(), output_vector.begin(),
+                   [](const auto& elem) -> T { return elem.IsEmpty() ? T() : elem.Get(); });
     kOut(cc).Send(output_vector);
     return absl::OkStatus();
   }
