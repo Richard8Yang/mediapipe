@@ -6,9 +6,10 @@
 #include "mediapipe/framework/formats/rect.pb.h"
 #include "mediapipe/framework/formats/classification.pb.h"
 
-static NSString* const kGraphName           = @"multi_holistic_tracking_gpu";
-static const char* kInputStream             = "input_video";
-static const char* kOutputStream            = "output_video";
+static NSString* const kGraphName   = @"multi_holistic_tracking_gpu";
+static const char* kInputStream     = "input_video";
+static const char* kOutputStream    = "output_video";
+static const int  kHolisticLandmarkTypeCount = 4;
 
 @implementation HolisticTrackerConfig
 - (instancetype)init: (bool)enableSegmentation
@@ -192,11 +193,10 @@ static const char* kOutputStream            = "output_video";
         // Returns NSDictionary with index as the key, value of type NSDictionary<NSDictionary<NSString, NSArray<Landmark>>>
         const auto& multiLandmarks = packet.Get<std::vector<std::vector<::mediapipe::NormalizedLandmarkList>>>();
         NSMutableDictionary *result = [NSMutableDictionary dictionary];
-        NSUInteger kLandmarkTypeCount = sizeof(kLandmarkTypeNames) / sizeof(id);
         for (int idx = 0; idx < multiLandmarks.size(); ++idx) {
             NSMutableDictionary *holistic = [NSMutableDictionary dictionary];
             const auto& holisticLandmarksArray = multiLandmarks[idx];
-            if (holisticLandmarksArray.size() != kLandmarkTypeCount) {
+            if (holisticLandmarksArray.size() != kHolisticLandmarkTypeCount) {
                 NSLog(@"Wrong number (%d) of landmark types for holistic landmarks %d", holisticLandmarksArray.size(), idx);
                 continue;
             }
@@ -210,7 +210,7 @@ static const char* kOutputStream            = "output_video";
                     [landmarkArray addObject:landmark];
                     //[landmark release];
                 }
-                [holistic setObject:landmarkArray forKey:kLandmarkTypeNames[landmarkTypeIdx]];
+                [holistic setObject:landmarkArray forKey:[NSNumber numberWithInt:landmarkTypeIdx]];
                 //[landmarkArray release];
             }
             [result setObject:holistic forKey:[NSNumber numberWithInt:idx]];
