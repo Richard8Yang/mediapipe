@@ -13,8 +13,6 @@ static const char* kMultiRightHandStream    = "multi_right_hand_landmarks";
 // vector<vector<mediapipe::NormalizedLandmarkList>> in the order of < face->pose->lefthand->righthand > landmarks
 static const char* kMultiHolisticStream     = "multi_holistic_landmarks_array";
 
-static const id kLandmarkTypeNames[] = { @"face", @"pose", @"lefthand", @"righthand" };
-
 @class HolisticTracker;
 @class Landmark;
 
