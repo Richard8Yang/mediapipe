@@ -183,6 +183,26 @@ public final class PacketGetter {
     }
   }
 
+  public static <T> List<List<T>> getProtoVectorVector(final Packet packet, Parser<T> messageParser) {
+    byte[][][] protoVector = nativeGetProtoVectorVector(packet.getNativeHandle());
+    Preconditions.checkNotNull(
+        protoVector, "Vector of protocol buffer objects should not be null!");
+    try {
+      List<List<T>> resultList = new ArrayList<>();
+      for (byte[][] subVector : protoVector) {
+        List<T> parsedMessageList = new ArrayList<>();
+        for (byte[] message : subVector) {
+          T parsedMessage = messageParser.parseFrom(message);
+          parsedMessageList.add(parsedMessage);
+        }
+        resultList.add(parsedMessageList);
+      }
+      return resultList;
+    } catch (InvalidProtocolBufferException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
   public static <T extends MessageLite> List<T> getProtoVector(
       final Packet packet, T defaultInstance) {
     @SuppressWarnings("unchecked")
@@ -422,6 +442,8 @@ public final class PacketGetter {
   private static native double[] nativeGetFloat64Vector(long nativePacketHandle);
 
   private static native byte[][] nativeGetProtoVector(long nativePacketHandle);
+
+  private static native byte[][][] nativeGetProtoVectorVector(long nativePacketHandle);
 
   private static native int nativeGetImageWidth(long nativePacketHandle);
 

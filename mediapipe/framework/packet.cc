@@ -161,6 +161,14 @@ Packet::GetVectorOfProtoMessageLitePtrs() const {
   return holder_->GetVectorOfProtoMessageLite();
 }
 
+StatusOr<std::vector<std::vector<const proto_ns::MessageLite*>>>
+Packet::GetVectorVectorOfProtoMessageLitePtrs() const {
+  if (holder_ == nullptr) {
+    return absl::InternalError("Packet is empty.");
+  }
+  return holder_->GetVectorVectorOfProtoMessageLite();
+}
+
 MEDIAPIPE_REGISTER_TYPE(::mediapipe::Packet, "::mediapipe::Packet", nullptr,
                         nullptr);
 MEDIAPIPE_REGISTER_TYPE(::std::vector<::mediapipe::Packet>,

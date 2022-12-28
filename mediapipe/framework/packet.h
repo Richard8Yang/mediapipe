@@ -242,6 +242,9 @@ class Packet {
   StatusOr<std::vector<const proto_ns::MessageLite*>>
   GetVectorOfProtoMessageLitePtrs() const;
 
+  StatusOr<std::vector<std::vector<const proto_ns::MessageLite*>>>
+  GetVectorVectorOfProtoMessageLitePtrs() const;
+
   // Returns an error if the packet does not contain data of type T.
   template <typename T>
   absl::Status ValidateAsType() const {
@@ -466,6 +469,9 @@ class HolderBase {
   virtual StatusOr<std::vector<const proto_ns::MessageLite*>>
   GetVectorOfProtoMessageLite() const = 0;
 
+  virtual StatusOr<std::vector<std::vector<const proto_ns::MessageLite*>>>
+  GetVectorVectorOfProtoMessageLite() const = 0;
+
   virtual bool HasForeignOwner() const { return false; }
 };
 
@@ -490,6 +496,13 @@ template <typename ItemT, typename Allocator>
 struct is_proto_vector<std::vector<ItemT, Allocator>>
     : public std::is_base_of<proto_ns::MessageLite, ItemT>::type {};
 
+template <typename Type>
+struct is_proto_vector_vector : public std::false_type {};
+
+template <typename ItemT, typename Allocator>
+struct is_proto_vector_vector<std::vector<std::vector<ItemT, Allocator>>>
+    : public std::is_base_of<proto_ns::MessageLite, ItemT>::type {};
+
 // Helper function to create and return a vector of pointers to proto message
 // elements of the vector passed into the function.
 template <typename T>
@@ -509,6 +522,31 @@ ConvertToVectorOfProtoMessageLitePtrs(const T* data,
   for (auto it = data->begin(); it != data->end(); ++it) {
     const proto_ns::MessageLite* element = &(*it);
     result.push_back(element);
+  }
+  return result;
+}
+
+template <typename T>
+StatusOr<std::vector<std::vector<const proto_ns::MessageLite*>>>
+ConvertToVectorVectorOfProtoMessageLitePtrs(const T* data,
+                                      /*is_proto_vector=*/std::false_type) {
+  return absl::InvalidArgumentError(absl::StrCat(
+      "The Packet stores \"", kTypeId<T>.name(), "\"",
+      "which is not convertible to vector<proto_ns::MessageLite*>."));
+}
+
+template <typename T>
+StatusOr<std::vector<std::vector<const proto_ns::MessageLite*>>>
+ConvertToVectorVectorOfProtoMessageLitePtrs(const T* data,
+                                      /*is_proto_vector=*/std::true_type) {
+  std::vector<std::vector<const proto_ns::MessageLite*>> result;
+  for (auto it = data->begin(); it != data->end(); ++it) {
+    std::vector<const proto_ns::MessageLite*> subArray;
+    for (auto subIt = it->begin(); subIt != it->end(); ++subIt) {
+      const proto_ns::MessageLite* element = &(*subIt);
+      subArray.push_back(element);
+    }
+    result.push_back(subArray);
   }
   return result;
 }
@@ -612,6 +650,11 @@ class Holder : public HolderBase, private HolderPayloadRegistrator<T> {
   StatusOr<std::vector<const proto_ns::MessageLite*>>
   GetVectorOfProtoMessageLite() const override {
     return ConvertToVectorOfProtoMessageLitePtrs(ptr_, is_proto_vector<T>());
+  }
+
+  StatusOr<std::vector<std::vector<const proto_ns::MessageLite*>>>
+  GetVectorVectorOfProtoMessageLite() const override {
+    return ConvertToVectorVectorOfProtoMessageLitePtrs(ptr_, is_proto_vector_vector<T>());
   }
 
  private:
