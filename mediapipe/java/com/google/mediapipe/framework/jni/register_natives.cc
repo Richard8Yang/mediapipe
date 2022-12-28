@@ -281,6 +281,9 @@ void RegisterPacketGetterNatives(JNIEnv *env) {
                      "nativeGetProtoVector", "(J)[[B",
                      (void *)&PACKET_GETTER_METHOD(nativeGetProtoVector));
   AddJNINativeMethod(&packet_getter_methods, packet_getter,
+                     "nativeGetProtoVectorVector", "(J)[[B",
+                     (void *)&PACKET_GETTER_METHOD(nativeGetProtoVectorVector));
+  AddJNINativeMethod(&packet_getter_methods, packet_getter,
                      "nativeGetRgbaFromRgb", "(JLjava/nio/ByteBuffer;)Z",
                      (void *)&PACKET_GETTER_METHOD(nativeGetRgbaFromRgb));
   RegisterNativesVector(env, packet_getter_class, packet_getter_methods);

@@ -208,6 +208,46 @@ JNIEXPORT jobjectArray JNICALL PACKET_GETTER_METHOD(nativeGetProtoVector)(
   return proto_array;
 }
 
+JNIEXPORT jobjectArray JNICALL PACKET_GETTER_METHOD(nativeGetProtoVectorVector)(
+    JNIEnv* env, jobject thiz, jlong packet) {
+  mediapipe::Packet mediapipe_packet =
+      mediapipe::android::Graph::GetPacketFromHandle(packet);
+  auto get_proto_vector = mediapipe_packet.GetVectorVectorOfProtoMessageLitePtrs();
+  if (!get_proto_vector.ok()) {
+    env->Throw(mediapipe::android::CreateMediaPipeException(
+        env, get_proto_vector.status()));
+  }
+  const std::vector<std::vector<const ::mediapipe::proto_ns::MessageLite*>>& proto_vector =
+      get_proto_vector.value();
+  // TODO: move to register natives.
+  jclass byte_array_cls = env->FindClass("[B");
+  jobjectArray proto_array =
+      env->NewObjectArray(proto_vector.size(), byte_array_cls, nullptr);
+  for (int i = 0; i < proto_vector.size(); ++i) {
+    auto sub_vector = proto_vector[i];
+    jobjectArray sub_array = env->NewObjectArray(sub_vector.size(), byte_array_cls, nullptr);
+    for (int k = 0; k < sub_vector.size(); ++k) {
+      const ::mediapipe::proto_ns::MessageLite* proto_message = sub_vector[k];
+
+      // Convert the proto object into a Java byte array.
+      std::string serialized;
+      proto_message->SerializeToString(&serialized);
+      jbyteArray byte_array = env->NewByteArray(serialized.size());
+      env->SetByteArrayRegion(byte_array, 0, serialized.size(),
+                              reinterpret_cast<const jbyte*>(serialized.c_str()));
+
+      // Add the serialized proto byte_array to the output array.
+      env->SetObjectArrayElement(sub_array, k, byte_array);
+      env->DeleteLocalRef(byte_array);
+    }
+    env->SetObjectArrayElement(proto_array, i, sub_array);
+    env->DeleteLocalRef(sub_array);
+  }
+  env->DeleteLocalRef(byte_array_cls);
+
+  return proto_array;
+}
+
 JNIEXPORT jshortArray JNICALL PACKET_GETTER_METHOD(nativeGetInt16Vector)(
     JNIEnv* env, jobject thiz, jlong packet) {
   const std::vector<int16_t>& values =
