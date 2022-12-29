@@ -33,6 +33,14 @@
 #include "mediapipe/gpu/gpu_buffer.h"
 #endif  // !MEDIAPIPE_DISABLE_GPU
 
+/*
+#include <android/log.h>
+#define LOG_TAG    "MP"
+#define LOGI(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define LOGD(...)  __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+*/
+
 namespace {
 using mediapipe::android::SerializedMessageIds;
 using mediapipe::android::ThrowIfError;
@@ -277,6 +285,7 @@ JNIEXPORT jobjectArray JNICALL PACKET_GETTER_METHOD(nativeGetProtoVectorVector)(
     JNIEnv* env, jobject thiz, jlong packet) {
   mediapipe::Packet mediapipe_packet =
       mediapipe::android::Graph::GetPacketFromHandle(packet);
+  //LOGD("nativeGetProtoVectorVector: entry");
   auto get_proto_vector = mediapipe_packet.GetVectorVectorOfProtoMessageLitePtrs();
   if (!get_proto_vector.ok()) {
     env->Throw(mediapipe::android::CreateMediaPipeException(
@@ -284,12 +293,17 @@ JNIEXPORT jobjectArray JNICALL PACKET_GETTER_METHOD(nativeGetProtoVectorVector)(
   }
   const std::vector<std::vector<const ::mediapipe::proto_ns::MessageLite*>>& proto_vector =
       get_proto_vector.value();
+
+  //LOGD("nativeGetProtoVectorVector: vector len: %d", proto_vector.size());
   // TODO: move to register natives.
+  jclass obj_array_cls = env->FindClass("[[B");
+  jobjectArray proto_array = env->NewObjectArray(proto_vector.size(), obj_array_cls, nullptr);
+  env->DeleteLocalRef(obj_array_cls);
+
   jclass byte_array_cls = env->FindClass("[B");
-  jobjectArray proto_array =
-      env->NewObjectArray(proto_vector.size(), byte_array_cls, nullptr);
   for (int i = 0; i < proto_vector.size(); ++i) {
-    auto sub_vector = proto_vector[i];
+    const auto& sub_vector = proto_vector[i];
+    //LOGD("nativeGetProtoVectorVector: sub vector len: %d", sub_vector.size());
     jobjectArray sub_array = env->NewObjectArray(sub_vector.size(), byte_array_cls, nullptr);
     for (int k = 0; k < sub_vector.size(); ++k) {
       const ::mediapipe::proto_ns::MessageLite* proto_message = sub_vector[k];
@@ -309,6 +323,8 @@ JNIEXPORT jobjectArray JNICALL PACKET_GETTER_METHOD(nativeGetProtoVectorVector)(
     env->DeleteLocalRef(sub_array);
   }
   env->DeleteLocalRef(byte_array_cls);
+
+  //LOGD("nativeGetProtoVectorVector: exit");
 
   return proto_array;
 }
