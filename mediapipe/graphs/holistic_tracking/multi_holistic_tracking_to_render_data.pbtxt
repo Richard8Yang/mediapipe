@@ -2,6 +2,8 @@
 
 type: "MultiHolisticTrackingToRenderData"
 
+input_side_packet: "ENABLE_LANDMARK_OVERLAY:enable_landmark_overlay"
+
 # Image size. (std::pair<int, int>)
 input_stream: "IMAGE_SIZE:image_size"
 # Pose landmarks. (NormalizedLandmarkList)
@@ -33,6 +35,76 @@ output_stream: "RENDER_DATA_RHJOINTS:right_hand_landmarks_joints_rd"
 output_stream: "RENDER_DATA_FCON:face_landmarks_connections_rd"
 output_stream: "RENDER_DATA_FJOINTS:face_landmarks_joints_rd"
 
+# When the optional input side packet "use_prev_landmarks" is either absent or
+# set to true, uses the landmarks on the previous image to help localize
+# landmarks on the current image.
+node {
+  calculator: "GateCalculator"
+  input_side_packet: "ALLOW:enable_landmark_overlay"
+  input_stream: "roi"
+  output_stream: "gated_roi"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      allow: false
+    }
+  }
+}
+node {
+  calculator: "GateCalculator"
+  input_side_packet: "ALLOW:enable_landmark_overlay"
+  input_stream: "image_size"
+  output_stream: "gated_image_size"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      allow: false
+    }
+  }
+}
+node {
+  calculator: "GateCalculator"
+  input_side_packet: "ALLOW:enable_landmark_overlay"
+  input_stream: "landmarks"
+  output_stream: "gated_landmarks"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      allow: false
+    }
+  }
+}
+node {
+  calculator: "GateCalculator"
+  input_side_packet: "ALLOW:enable_landmark_overlay"
+  input_stream: "left_hand_landmarks"
+  output_stream: "gated_left_hand_landmarks"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      allow: false
+    }
+  }
+}
+node {
+  calculator: "GateCalculator"
+  input_side_packet: "ALLOW:enable_landmark_overlay"
+  input_stream: "right_hand_landmarks"
+  output_stream: "gated_right_hand_landmarks"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      allow: false
+    }
+  }
+}
+node {
+  calculator: "GateCalculator"
+  input_side_packet: "ALLOW:enable_landmark_overlay"
+  input_stream: "face_landmarks"
+  output_stream: "gated_face_landmarks"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      allow: false
+    }
+  }
+}
+
 # --------------------------------------------------------------------------- #
 # ------------------ Calculates scale for render objects -------------------- #
 # --------------------------------------------------------------------------- #
@@ -40,8 +112,8 @@ output_stream: "RENDER_DATA_FJOINTS:face_landmarks_joints_rd"
 # Calculates rendering scale based on the pose bounding box.
 node {
   calculator: "RectToRenderScaleCalculator"
-  input_stream: "NORM_RECT:roi"
-  input_stream: "IMAGE_SIZE:image_size"
+  input_stream: "NORM_RECT:gated_roi"
+  input_stream: "IMAGE_SIZE:gated_image_size"
   output_stream: "RENDER_SCALE:render_scale"
   node_options: {
     [type.googleapis.com/mediapipe.RectToRenderScaleCalculatorOptions] {
@@ -57,7 +129,7 @@ node {
 # Gets pose landmarks before wrists.
 node {
   calculator: "SplitNormalizedLandmarkListCalculator"
-  input_stream: "landmarks"
+  input_stream: "gated_landmarks"
   output_stream: "landmarks_before_wrist"
   node_options: {
     [type.googleapis.com/mediapipe.SplitVectorCalculatorOptions] {
@@ -69,7 +141,7 @@ node {
 # Gets pose left wrist landmark.
 node {
   calculator: "SplitNormalizedLandmarkListCalculator"
-  input_stream: "landmarks"
+  input_stream: "gated_landmarks"
   output_stream: "landmarks_left_wrist"
   node_options: {
     [type.googleapis.com/mediapipe.SplitVectorCalculatorOptions] {
@@ -81,7 +153,7 @@ node {
 # Gets pose right wrist landmark.
 node {
   calculator: "SplitNormalizedLandmarkListCalculator"
-  input_stream: "landmarks"
+  input_stream: "gated_landmarks"
   output_stream: "landmarks_right_wrist"
   node_options: {
     [type.googleapis.com/mediapipe.SplitVectorCalculatorOptions] {
@@ -93,7 +165,7 @@ node {
 # Gets pose landmarks after wrists.
 node {
   calculator: "SplitNormalizedLandmarkListCalculator"
-  input_stream: "landmarks"
+  input_stream: "gated_landmarks"
   output_stream: "landmarks_after_wrist"
   node_options: {
     [type.googleapis.com/mediapipe.SplitVectorCalculatorOptions] {
@@ -105,7 +177,7 @@ node {
 # Gets left hand wrist landmark.
 node {
   calculator: "HandWristForPose"
-  input_stream: "HAND_LANDMARKS:left_hand_landmarks"
+  input_stream: "HAND_LANDMARKS:gated_left_hand_landmarks"
   output_stream: "WRIST_LANDMARK:left_hand_wrist_landmark"
 }
 
@@ -121,7 +193,7 @@ node {
 # Gets right hand wrist landmark.
 node {
   calculator: "HandWristForPose"
-  input_stream: "HAND_LANDMARKS:right_hand_landmarks"
+  input_stream: "HAND_LANDMARKS:gated_right_hand_landmarks"
   output_stream: "WRIST_LANDMARK:right_hand_wrist_landmark"
 }
 
@@ -309,7 +381,7 @@ node {
 # Converts left hand connections to white lines.
 node {
   calculator: "LandmarksToRenderDataCalculator"
-  input_stream: "NORM_LANDMARKS:left_hand_landmarks"
+  input_stream: "NORM_LANDMARKS:gated_left_hand_landmarks"
   input_stream: "RENDER_SCALE:render_scale"
   output_stream: "RENDER_DATA:left_hand_landmarks_connections_rd"
   node_options: {
@@ -367,7 +439,7 @@ node {
 # Converts left hand color joints.
 node {
   calculator: "LandmarksToRenderDataCalculator"
-  input_stream: "NORM_LANDMARKS:left_hand_landmarks"
+  input_stream: "NORM_LANDMARKS:gated_left_hand_landmarks"
   input_stream: "RENDER_SCALE:render_scale"
   output_stream: "RENDER_DATA:left_hand_landmarks_joints_rd"
   node_options: {
@@ -387,7 +459,7 @@ node {
 # Converts right hand connections to white lines.
 node {
   calculator: "LandmarksToRenderDataCalculator"
-  input_stream: "NORM_LANDMARKS:right_hand_landmarks"
+  input_stream: "NORM_LANDMARKS:gated_right_hand_landmarks"
   input_stream: "RENDER_SCALE:render_scale"
   output_stream: "RENDER_DATA:right_hand_landmarks_connections_rd"
   node_options: {
@@ -445,7 +517,7 @@ node {
 # Converts right hand color joints.
 node {
   calculator: "LandmarksToRenderDataCalculator"
-  input_stream: "NORM_LANDMARKS:right_hand_landmarks"
+  input_stream: "NORM_LANDMARKS:gated_right_hand_landmarks"
   input_stream: "RENDER_SCALE:render_scale"
   output_stream: "RENDER_DATA:right_hand_landmarks_joints_rd"
   node_options: {
@@ -465,7 +537,7 @@ node {
 # Converts face connections to white lines.
 node {
   calculator: "LandmarksToRenderDataCalculator"
-  input_stream: "NORM_LANDMARKS:face_landmarks"
+  input_stream: "NORM_LANDMARKS:gated_face_landmarks"
   input_stream: "RENDER_SCALE:render_scale"
   output_stream: "RENDER_DATA:face_landmarks_connections_rd"
   node_options: {
@@ -735,7 +807,7 @@ node {
 # Converts face joints to cyan circles.
 node {
   calculator: "LandmarksToRenderDataCalculator"
-  input_stream: "NORM_LANDMARKS:face_landmarks"
+  input_stream: "NORM_LANDMARKS:gated_face_landmarks"
   input_stream: "RENDER_SCALE:render_scale"
   output_stream: "RENDER_DATA:face_landmarks_joints_rd"
   node_options: {

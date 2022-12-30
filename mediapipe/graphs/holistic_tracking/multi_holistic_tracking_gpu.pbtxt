@@ -8,6 +8,7 @@ input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
 input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
 input_side_packet: "MODEL_COMPLEXITY:model_complexity"
 input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
+input_side_packet: "ENABLE_LANDMARK_OVERLAY:enable_landmark_overlay"
 
 # GPU image with rendered results. (GpuBuffer)
 output_stream: "output_video"
@@ -111,6 +112,7 @@ node {
 # Converts pose, hands and face landmarks to a render data vector.
 node {
   calculator: "MultiHolisticTrackingToRenderData"
+  input_side_packet: "ENABLE_LANDMARK_OVERLAY:enable_landmark_overlay"
   input_stream: "IMAGE_SIZE:image_size_for_landmarks"
   input_stream: "POSE_LANDMARKS:pose_landmarks"
   input_stream: "POSE_ROI:pose_roi_from_landmarks"
