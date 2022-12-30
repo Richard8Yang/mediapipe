@@ -98,6 +98,9 @@ static const int  kHolisticLandmarkTypeCount = 4;
     MPPGraph* newGraph = [[MPPGraph alloc] initWithGraphConfig:config];
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(params.enableSegmentation)) named:"enable_segmentation"];
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(params.enableRefinedFace)) named:"refine_face_landmarks"];
+    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(true)) named:"enable_face_landmarks"];
+    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(true)) named:"enable_hands_landmarks"];
+    [newGraph setSidePacket:(mediapipe::MakePacket<bool>(true)) named:"enable_landmark_overlay"];
     [newGraph setSidePacket:(mediapipe::MakePacket<int>(params.maxPersonsToTrack)) named:"num_poses"];
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(false)) named:"smooth_landmarks"];
     if (params.enablePixelBufferOutput) {

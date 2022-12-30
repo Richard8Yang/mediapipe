@@ -10,6 +10,12 @@ input_side_packet: "MODEL_COMPLEXITY:model_complexity"
 input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
 input_side_packet: "ENABLE_LANDMARK_OVERLAY:enable_landmark_overlay"
 
+# Whether to run face landmarks model
+input_side_packet: "ENABLE_FACE_LANDMARKS:enable_face_landmarks"
+
+# Whether to run hands landmarks model
+input_side_packet: "ENABLE_HANDS_LANDMARKS:enable_hands_landmarks"
+
 # GPU image with rendered results. (GpuBuffer)
 output_stream: "output_video"
 
@@ -77,6 +83,8 @@ node {
   input_side_packet: "ENABLE_SEGMENTATION:enable_segmentation"
   input_side_packet: "SMOOTH_SEGMENTATION:smooth_segmentation"
   input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
+  input_side_packet: "ENABLE_FACE_LANDMARKS:enable_face_landmarks"
+  input_side_packet: "ENABLE_HANDS_LANDMARKS:enable_hands_landmarks"
   input_stream: "IMAGE:image_for_landmarks"
   input_stream: "IMAGE_SIZE:image_size_for_landmarks"
   input_stream: "ROI_FROM_DETECTION:single_pose_roi_from_detection"
