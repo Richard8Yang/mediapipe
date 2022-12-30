@@ -48,6 +48,7 @@ mediapipe_simple_subgraph(
         "//mediapipe/calculators/core:concatenate_proto_list_calculator",
         "//mediapipe/calculators/core:concatenate_vector_calculator",
         "//mediapipe/calculators/core:merge_calculator",
+        "//mediapipe/calculators/core:gate_calculator",
         "//mediapipe/calculators/core:split_proto_list_calculator",
         "//mediapipe/calculators/core:split_vector_calculator",
         "//mediapipe/calculators/util:detections_to_render_data_calculator",
