@@ -29,6 +29,12 @@ input_side_packet: "MODEL_COMPLEXITY:model_complexity"
 # functions as set to false. (bool)
 input_side_packet: "REFINE_FACE_LANDMARKS:refine_face_landmarks"
 
+# Whether to run face landmarks model
+input_side_packet: "ENABLE_FACE_LANDMARKS:enable_face_landmarks"
+
+# Whether to run hands landmarks model
+input_side_packet: "ENABLE_HANDS_LANDMARKS:enable_hands_landmarks"
+
 # Pose landmarks. (NormalizedLandmarkList)
 # 33 pose landmarks.
 output_stream: "POSE_LANDMARKS:pose_landmarks"
@@ -65,11 +71,35 @@ node {
 # Extracts face-related pose landmarks.
 node {
   calculator: "SplitNormalizedLandmarkListCalculator"
-  input_stream: "pose_landmarks"
+  input_stream: "gated_pose_landmarks_for_face"
   output_stream: "face_landmarks_from_pose"
   options: {
     [mediapipe.SplitVectorCalculatorOptions.ext] {
       ranges: { begin: 0 end: 11 }
+    }
+  }
+}
+
+node {
+  calculator: "GateCalculator"
+  input_side_packet: "ALLOW:enable_face_landmarks"
+  input_stream: "pose_landmarks"
+  output_stream: "gated_pose_landmarks_for_face"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      allow: true
+    }
+  }
+}
+
+node {
+  calculator: "GateCalculator"
+  input_side_packet: "ALLOW:enable_hands_landmarks"
+  input_stream: "pose_landmarks"
+  output_stream: "gated_pose_landmarks_for_hands"
+  options: {
+    [mediapipe.GateCalculatorOptions.ext] {
+      allow: true
     }
   }
 }
@@ -87,7 +117,7 @@ node {
 node {
   calculator: "HandLandmarksLeftAndRightGpu"
   input_stream: "IMAGE:image"
-  input_stream: "POSE_LANDMARKS:pose_landmarks"
+  input_stream: "POSE_LANDMARKS:gated_pose_landmarks_for_hands"
   output_stream: "LEFT_HAND_LANDMARKS:left_hand_landmarks"
   output_stream: "RIGHT_HAND_LANDMARKS:right_hand_landmarks"
 }
