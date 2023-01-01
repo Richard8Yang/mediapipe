@@ -21,6 +21,7 @@ static const int  kHolisticLandmarkTypeCount = 4;
     enableRightHandLandmarks: (bool)enableRightHandLandmarks
     enableHolisticLandmarks: (bool)enableHolisticLandmarks
     enablePoseWorldLandmarks: (bool)enablePoseWorldLandmarks
+    enableLandmarksOverlay: (bool)enableLandmarksOverlay
     enablePixelBufferOutput: (bool)enablePixelBufferOutput {
     self = [super init];
     if (self) {
@@ -33,6 +34,7 @@ static const int  kHolisticLandmarkTypeCount = 4;
         _enableRightHandLandmarks   = enableRightHandLandmarks;
         _enableHolisticLandmarks    = enableHolisticLandmarks;
         _enablePoseWorldLandmarks   = enablePoseWorldLandmarks;
+        _enableLandmarksOverlay     = enableLandmarksOverlay;
         _enablePixelBufferOutput    = enablePixelBufferOutput;
     }
     return self;
@@ -103,26 +105,28 @@ static const int  kHolisticLandmarkTypeCount = 4;
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(params.enableLandmarksOverlay)) named:"enable_landmark_overlay"];
     [newGraph setSidePacket:(mediapipe::MakePacket<int>(params.maxPersonsToTrack)) named:"num_poses"];
     [newGraph setSidePacket:(mediapipe::MakePacket<bool>(false)) named:"smooth_landmarks"];
+    
     if (params.enablePixelBufferOutput) {
         [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
     }
-    if (params.enableFaceLandmarks) {
+    // Separate landmarks streams of face/pose/hands are mutual exclusive with holistic landmarks stream
+    if (params.enableFaceLandmarks && !params.enableHolisticLandmarks) {
         [newGraph addFrameOutputStream:kMultiFaceStream outputPacketType:MPPPacketTypeRaw];
     }
-    if (params.enableLeftHandLandmarks) {
+    if (params.enableLeftHandLandmarks && !params.enableHolisticLandmarks) {
         [newGraph addFrameOutputStream:kMultiLeftHandStream outputPacketType:MPPPacketTypeRaw];
     }
-    if (params.enableRightHandLandmarks) {
+    if (params.enableRightHandLandmarks && !params.enableHolisticLandmarks) {
         [newGraph addFrameOutputStream:kMultiRightHandStream outputPacketType:MPPPacketTypeRaw];
     }
-    if (params.enablePoseLandmarks) {
+    if (params.enablePoseLandmarks && !params.enableHolisticLandmarks) {
         [newGraph addFrameOutputStream:kMultiPoseStream outputPacketType:MPPPacketTypeRaw];
-    }
-    if (params.enablePoseWorldLandmarks) {
-        [newGraph addFrameOutputStream:kMultiPoseWorldStream outputPacketType:MPPPacketTypeRaw];
     }
     if (params.enableHolisticLandmarks) {
         [newGraph addFrameOutputStream:kMultiHolisticStream outputPacketType:MPPPacketTypeRaw];
+    }
+    if (params.enablePoseWorldLandmarks) {
+        [newGraph addFrameOutputStream:kMultiPoseWorldStream outputPacketType:MPPPacketTypeRaw];
     }
 
     return newGraph;
