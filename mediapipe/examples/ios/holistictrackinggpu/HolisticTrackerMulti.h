@@ -31,6 +31,7 @@ static const char* kMultiHolisticStream     = "multi_holistic_landmarks_array";
 @property(nonatomic, readonly) bool enableRightHandLandmarks;
 @property(nonatomic, readonly) bool enableHolisticLandmarks;
 @property(nonatomic, readonly) bool enablePoseWorldLandmarks;
+@property(nonatomic, readonly) bool enableLandmarksOverlay;
 @property(nonatomic, readonly) bool enablePixelBufferOutput;
 
 - (instancetype)init: (bool)enableSegmentation
@@ -42,6 +43,7 @@ static const char* kMultiHolisticStream     = "multi_holistic_landmarks_array";
     enableRightHandLandmarks: (bool)enableRightHandLandmarks
     enableHolisticLandmarks: (bool)enableHolisticLandmarks
     enablePoseWorldLandmarks: (bool)enablePoseWorldLandmarks
+    enableLandmarksOverlay: (bool)enableLandmarksOverlay
     enablePixelBufferOutput: (bool)enablePixelBufferOutput;
 @end
 
