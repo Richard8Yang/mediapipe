@@ -192,6 +192,20 @@ public final class PacketGetter {
     }
   }
 
+  public static byte[][] getRawBytesVector(final Packet packet) {
+    byte[][] raw = nativeGetProtoVector(packet.getNativeHandle());
+    Preconditions.checkNotNull(
+        raw, "Vector of protocol buffer bytes should not be null!");
+    return raw;
+  }
+
+  public static byte[][][] getRawBytesVectorVector(final Packet packet) {
+    byte[][][] raw = nativeGetProtoVectorVector(packet.getNativeHandle());
+    Preconditions.checkNotNull(
+        raw, "Vector of protocol buffer bytes should not be null!");
+    return raw;
+  }
+
   public static <T extends MessageLite> List<T> getProtoVector(
       final Packet packet, T defaultInstance) {
     @SuppressWarnings("unchecked")
