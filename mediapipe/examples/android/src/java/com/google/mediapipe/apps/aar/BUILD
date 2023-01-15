@@ -19,4 +19,7 @@ mediapipe_aar(
         "//mediapipe/modules/pose_landmark:pose_landmark_full.tflite",
     ],
     assets_dir = "",
+    srcs = glob(
+        ["*.java"],
+    ),
 )
