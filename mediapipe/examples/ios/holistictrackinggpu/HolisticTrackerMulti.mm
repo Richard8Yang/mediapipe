@@ -193,7 +193,7 @@ static const int  kHolisticLandmarkTypeCount = 4;
             //[landmarkArray release];
         }
         NSString *name = [NSString stringWithUTF8String:streamName.c_str()];
-        [_delegate holisticTracker: self didOutputLandmarks:name packetData:result];
+        [_delegate holisticTracker: self didOutputLandmarks:name packetData:result timeStamp:packet.Timestamp().Value()];
         [result removeAllObjects];
     } else if (streamName == kMultiHolisticStream) {
         // vector<vector<mediapipe::NormalizedLandmarkList>>
@@ -223,7 +223,7 @@ static const int  kHolisticLandmarkTypeCount = 4;
             [result setObject:holistic forKey:[NSNumber numberWithInt:idx]];
         }
         NSString *name = [NSString stringWithUTF8String:streamName.c_str()];
-        [_delegate holisticTracker: self didOutputLandmarks:name packetData:result];
+        [_delegate holisticTracker: self didOutputLandmarks:name packetData:result timeStamp:packet.Timestamp().Value()];
         [result removeAllObjects];
     } else if (streamName == kMultiPoseWorldStream) {
         // vector<mediapipe::LandmarkList>
@@ -244,7 +244,7 @@ static const int  kHolisticLandmarkTypeCount = 4;
             //[landmarkArray release];
         }
         NSString *name = [NSString stringWithUTF8String:streamName.c_str()];
-        [_delegate holisticTracker: self didOutputLandmarks:name packetData:result];
+        [_delegate holisticTracker: self didOutputLandmarks:name packetData:result timeStamp:packet.Timestamp().Value()];
         [result removeAllObjects];
     } else {
         // Unsupported stream

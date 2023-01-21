@@ -261,6 +261,8 @@ void RegisterPacketGetterNatives(JNIEnv *env) {
   jclass packet_getter_class = env->FindClass(packet_getter_name.c_str());
 
   std::vector<JNINativeMethodStrings> packet_getter_methods;
+  AddJNINativeMethod(&packet_getter_methods, packet_getter, "nativeGetTimestamp",
+                     "(J)L", (void *)&PACKET_GETTER_METHOD(nativeGetTimestamp));
   AddJNINativeMethod(&packet_getter_methods, packet_getter, "nativeGetBytes",
                      "(J)[B", (void *)&PACKET_GETTER_METHOD(nativeGetBytes));
   AddJNINativeMethod(&packet_getter_methods, packet_getter,

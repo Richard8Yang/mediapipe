@@ -62,6 +62,10 @@ JNIEXPORT jstring JNICALL PACKET_GETTER_METHOD(nativeGetString)(JNIEnv* env,
                                                                 jobject thiz,
                                                                 jlong packet);
 
+JNIEXPORT jlong JNICALL PACKET_GETTER_METHOD(nativeGetTimestamp)(JNIEnv* env,
+                                                                 jobject thiz,
+                                                                 jlong packet);
+
 JNIEXPORT jbyteArray JNICALL PACKET_GETTER_METHOD(nativeGetBytes)(JNIEnv* env,
                                                                   jobject thiz,
                                                                   jlong packet);
