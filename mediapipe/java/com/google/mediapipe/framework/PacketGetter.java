@@ -112,6 +112,10 @@ public final class PacketGetter {
     return nativeGetString(packet.getNativeHandle());
   }
 
+  public static long getTimestamp(final Packet packet) {
+    return nativeGetTimestamp(packet.getNativeHandle());
+  }
+
   public static byte[] getBytes(final Packet packet) {
     return nativeGetBytes(packet.getNativeHandle());
   }
@@ -372,6 +376,8 @@ public final class PacketGetter {
   private static native boolean nativeGetBool(long nativePacketHandle);
 
   private static native String nativeGetString(long nativePacketHandle);
+
+  private static native long nativeGetTimestamp(long nativePacketHandle);
 
   private static native byte[] nativeGetBytes(long nativePacketHandle);
 

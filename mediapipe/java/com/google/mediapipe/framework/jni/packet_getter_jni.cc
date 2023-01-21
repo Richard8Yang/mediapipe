@@ -134,6 +134,13 @@ JNIEXPORT jstring JNICALL PACKET_GETTER_METHOD(nativeGetString)(JNIEnv* env,
   return env->NewStringUTF(value.c_str());
 }
 
+JNIEXPORT jlong JNICALL
+PACKET_GETTER_METHOD(nativeGetTimestamp)(JNIEnv* env, jobject thiz, jlong packet) {
+  mediapipe::Packet mediapipe_packet =
+      mediapipe::android::Graph::GetPacketFromHandle(packet);
+  return mediapipe_packet.Timestamp().Value();
+}
+
 JNIEXPORT jbyteArray JNICALL
 PACKET_GETTER_METHOD(nativeGetBytes)(JNIEnv* env, jobject thiz, jlong packet) {
   const std::string& value = GetFromNativeHandle<std::string>(packet);

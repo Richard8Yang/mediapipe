@@ -18,7 +18,7 @@ static const char* kMultiHolisticStream     = "multi_holistic_landmarks_array";
 
 @protocol TrackerDelegate <NSObject>
 - (void)holisticTracker: (HolisticTracker*)holisticTracker didOutputPixelBuffer: (CVPixelBufferRef)pixelBuffer;
-- (void)holisticTracker: (HolisticTracker*)holisticTracker didOutputLandmarks: (NSString *)name packetData: (NSDictionary *)packet;
+- (void)holisticTracker: (HolisticTracker*)holisticTracker didOutputLandmarks: (NSString *)name packetData: (NSDictionary *)packet timeStamp: (int64_t)ts;
 @end
 
 @interface HolisticTrackerConfig: NSObject
