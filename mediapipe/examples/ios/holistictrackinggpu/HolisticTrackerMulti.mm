@@ -42,16 +42,17 @@ static const int  kHolisticLandmarkTypeCount = 4;
 @end
 
 @interface Landmark()
-- (instancetype)initWithX:(float)x y:(float)y z:(float)z;
+- (instancetype)initWithX:(float)x y:(float)y z:(float)z visibility:(float)visibility;
 @end
 
 @implementation Landmark
-- (instancetype)initWithX:(float)x y:(float)y z:(float)z {
+- (instancetype)initWithX:(float)x y:(float)y z:(float)z visibility:(float)visibility{
     self = [super init];
     if (self) {
         _x = x;
         _y = y;
         _z = z;
+        _visibility = visibility;
     }
     return self;
 }
@@ -185,7 +186,8 @@ static const int  kHolisticLandmarkTypeCount = 4;
             for (int i = 0; i < landmarks.landmark_size(); ++i) {
                 Landmark *landmark = [[Landmark alloc]  initWithX:landmarks.landmark(i).x()
                                                                 y:landmarks.landmark(i).y()
-                                                                z:landmarks.landmark(i).z()];
+                                                                z:landmarks.landmark(i).z()
+                                                                visibility:landmarks.landmark(i).visibility()];
                 [landmarkArray addObject:landmark];
                 //[landmark release];
             }
@@ -213,7 +215,8 @@ static const int  kHolisticLandmarkTypeCount = 4;
                 for (int i = 0; i < landmarks.landmark_size(); ++i) {
                     Landmark *landmark = [[Landmark alloc]  initWithX:landmarks.landmark(i).x()
                                                                     y:landmarks.landmark(i).y()
-                                                                    z:landmarks.landmark(i).z()];
+                                                                    z:landmarks.landmark(i).z()
+                                                                    visibility:landmarks.landmark(i).visibility()];
                     [landmarkArray addObject:landmark];
                     //[landmark release];
                 }
@@ -236,7 +239,8 @@ static const int  kHolisticLandmarkTypeCount = 4;
             for (int i = 0; i < landmarks.landmark_size(); ++i) {
                 Landmark *landmark = [[Landmark alloc]  initWithX:landmarks.landmark(i).x()
                                                                 y:landmarks.landmark(i).y()
-                                                                z:landmarks.landmark(i).z()];
+                                                                z:landmarks.landmark(i).z()
+                                                                visibility:landmarks.landmark(i).visibility()];
                 [landmarkArray addObject:landmark];
                 //[landmark release];
             }

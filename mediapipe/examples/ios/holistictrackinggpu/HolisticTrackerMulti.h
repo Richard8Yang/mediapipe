@@ -58,4 +58,5 @@ static const char* kMultiHolisticStream     = "multi_holistic_landmarks_array";
 @property(nonatomic, readonly) float x;
 @property(nonatomic, readonly) float y;
 @property(nonatomic, readonly) float z;
+@property(nonatomic, readonly) float visibility;
 @end
