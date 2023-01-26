@@ -97,6 +97,12 @@ node {
   output_stream: "ROI_FROM_LANDMARKS:pose_roi_from_landmarks"
 }
 
+node {
+  calculator: "LandmarkConvertCalculator"
+  input_stream: "LANDMARKS:pose_world_landmarks"
+  output_stream: "NORM_LANDMARKS:converted_pose_world_landmarks"
+}
+
 # Merge all landmarks to holistic landmarks vector that contains 
 # input stream in a vector in the original order: vector<NormalizedLandmarks>
 node {
@@ -105,7 +111,7 @@ node {
   input_stream: "pose_landmarks"
   input_stream: "left_hand_landmarks"
   input_stream: "right_hand_landmarks"
-  #input_stream: "pose_world_landmarks"
+  input_stream: "converted_pose_world_landmarks"
   output_stream: "holistic_landmarks_array"
 }
 

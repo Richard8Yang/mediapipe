@@ -9,7 +9,7 @@
 static NSString* const kGraphName   = @"multi_holistic_tracking_gpu";
 static const char* kInputStream     = "input_video";
 static const char* kOutputStream    = "output_video";
-static const int  kHolisticLandmarkTypeCount = 4;
+static const int  kHolisticLandmarkTypeCount = 5;   // face, pose, lefthand, righthand, poseworld
 
 @implementation HolisticTrackerConfig
 - (instancetype)init: (bool)enableSegmentation

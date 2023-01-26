@@ -106,6 +106,7 @@ cc_library(
         "//mediapipe/calculators/image:image_properties_calculator",
         "//mediapipe/calculators/util:annotation_overlay_calculator",
         "//mediapipe/calculators/util:landmarks_to_render_data_calculator",
+        "//mediapipe/calculators/util:landmark_convert_calculator",
         "//mediapipe/calculators/image:recolor_calculator",
         "//mediapipe/modules/holistic_landmark:multi_pose_detector_gpu",
     ],

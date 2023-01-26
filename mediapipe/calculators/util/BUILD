@@ -924,6 +924,19 @@ cc_library(
     alwayslink = 1,
 )
 
+cc_library(
+    name = "landmark_convert_calculator",
+    srcs = ["landmark_convert_calculator.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:landmark_cc_proto",
+        "//mediapipe/framework/port:ret_check",
+        "//mediapipe/framework/port:status",
+    ],
+    alwayslink = 1,
+)
+
 mediapipe_proto_library(
     name = "landmarks_smoothing_calculator_proto",
     srcs = ["landmarks_smoothing_calculator.proto"],
